@@ -27,8 +27,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.ivan.konverzijavaluta.R;
-import com.example.ivan.konverzijavaluta.database.KonverzijaValutaDatabase;
-import com.example.ivan.konverzijavaluta.provider.KonverzijaValutaProvider;
+import com.example.ivan.konverzijavaluta.database.KonverzijaDatabase;
+import com.example.ivan.konverzijavaluta.provider.KonverzijaProvider;
 import com.example.ivan.konverzijavaluta.service.DownloadIntentService;
 
 import java.text.NumberFormat;
@@ -53,22 +53,22 @@ public class DateChooseFragment extends Fragment {
     @InjectView(R.id.etUlaznaVrijednost)
     EditText ulaznaVrijednost;
     @InjectView(R.id.sUlaznaValuta)
-    Spinner ulaznaValutaSpinner;
+    Spinner  ulaznaValutaSpinner;
     @InjectView(R.id.sIzlaznaValuta)
-    Spinner izlaznaValutaSpinner;
+    Spinner  izlaznaValutaSpinner;
     @InjectView(R.id.sDan)
-    Spinner spinnerDan;
+    Spinner  spinnerDan;
     @InjectView(R.id.sMjesec)
-    Spinner spinnerMjesec;
+    Spinner  spinnerMjesec;
     @InjectView(R.id.sGodina)
-    Spinner spinnerGodina;
+    Spinner  spinnerGodina;
 
     public static final String SHOW_DATA = "show data";
-    public static final String SREDNJA = "srednja";
-    public static final String KUPOVNA = "kupovna";
-    public static final String PRODAJNA = "prodajna";
-    public static final String HRK = "HRK";
-    public static KonverzijaValutaDatabase db;
+    public static final String SREDNJA   = "srednja";
+    public static final String KUPOVNA   = "kupovna";
+    public static final String PRODAJNA  = "prodajna";
+    public static final String HRK       = "HRK";
+    public static KonverzijaDatabase db;
     private boolean isTaskRunning = false;
     private ResponseReceiver receiver;
     IntentFilter filter;
@@ -80,16 +80,13 @@ public class DateChooseFragment extends Fragment {
         ButterKnife.inject(this, view);
 
         if (savedInstanceState != null) {
-
             showData.setText(savedInstanceState.getString(SHOW_DATA));
             izlaznaVrijednostProdajna.setText(savedInstanceState.getString(PRODAJNA));
             izlaznaVrijednostSrednja.setText(savedInstanceState.getString(SREDNJA));
             izlaznaVrijednostKupovna.setText(savedInstanceState.getString(KUPOVNA));
-
         }
 
         return view;
-
     }
 
     @Override
@@ -97,7 +94,7 @@ public class DateChooseFragment extends Fragment {
         super.onCreate(savedInstanceState);
         setRetainInstance(true);
 
-        db = new KonverzijaValutaDatabase(getActivity());
+        db = new KonverzijaDatabase(getActivity());
 
         if (BuildConfig.DEBUG) {
             Timber.plant(new Timber.DebugTree());
@@ -121,30 +118,9 @@ public class DateChooseFragment extends Fragment {
         super.onResume();
         getActivity().registerReceiver(receiver, filter);
         if (isMyServiceRunning()) {
-
             MainStartingActivity.progressBar.setVisibility(View.VISIBLE);
-
         } else {
-
-            ConnectivityManager connMgr = (ConnectivityManager) getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
-            NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
-
-            if (networkInfo != null && networkInfo.isConnected()) {
-
-                if (!isTaskRunning) {
-
-                    isTaskRunning = true;
-
-                    MainStartingActivity.progressBar.setVisibility(View.VISIBLE);
-                    Intent msgIntent = new Intent(getActivity(), DownloadIntentService.class);
-                    getActivity().startService(msgIntent);
-
-                }
-
-            } else {
-                Toast.makeText(getActivity(), "Nema internet konekcije", Toast.LENGTH_SHORT).show();
-            }
-
+            startDownloadService();
         }
     }
 
@@ -170,11 +146,8 @@ public class DateChooseFragment extends Fragment {
 
     @Override
     public void onDetach() {
-
         if (MainStartingActivity.progressBar != null && MainStartingActivity.progressBar.isShown()) {
-
             MainStartingActivity.progressBar.setVisibility(View.INVISIBLE);
-
         }
 
         super.onDetach();
@@ -183,17 +156,14 @@ public class DateChooseFragment extends Fragment {
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-
         outState.putString(SHOW_DATA, showData.getText().toString());
         outState.putString(SREDNJA, izlaznaVrijednostSrednja.getText().toString());
         outState.putString(KUPOVNA, izlaznaVrijednostKupovna.getText().toString());
         outState.putString(PRODAJNA, izlaznaVrijednostProdajna.getText().toString());
-
     }
 
     @OnClick(R.id.bIzracunaj)
     public void submit() {
-
         String ulaznaValuta = ulaznaValutaSpinner.getSelectedItem().toString();
         String izlaznaValuta = izlaznaValutaSpinner.getSelectedItem().toString();
         String dan = spinnerDan.getSelectedItem().toString();
@@ -216,13 +186,13 @@ public class DateChooseFragment extends Fragment {
         formater.setMaximumFractionDigits(2);
 
         String[] projection = {
-                KonverzijaValutaDatabase.ID,
-                KonverzijaValutaDatabase.COL_DATE,
-                KonverzijaValutaDatabase.COL_ZEMLJA_VALUTA,
-                KonverzijaValutaDatabase.COL_KUPOVNI,
-                KonverzijaValutaDatabase.COL_SREDNJI,
-                KonverzijaValutaDatabase.COL_PRODAJNI};
-        Uri uri = Uri.parse(KonverzijaValutaProvider.CONTENT_URI + "/" + 1);
+                KonverzijaDatabase.ID,
+                KonverzijaDatabase.COL_DATE,
+                KonverzijaDatabase.COL_ZEMLJA_VALUTA,
+                KonverzijaDatabase.COL_KUPOVNI,
+                KonverzijaDatabase.COL_SREDNJI,
+                KonverzijaDatabase.COL_PRODAJNI};
+        Uri uri = Uri.parse(KonverzijaProvider.CONTENT_URI + "/" + 1);
 
         if (dan.length() == 1) {
             dan = "0" + dan;
@@ -240,31 +210,48 @@ public class DateChooseFragment extends Fragment {
             boolean noData = false;
             cursor.moveToFirst();
             if (cursor.getCount() > 0) {
-                noData = cursor.getString(cursor.getColumnIndexOrThrow(KonverzijaValutaDatabase.COL_ZEMLJA_VALUTA)).equals(DownloadIntentService.NO_DATA);
+                noData = cursor.getString(
+                        cursor.getColumnIndexOrThrow(KonverzijaDatabase.COL_ZEMLJA_VALUTA)).equals(
+                        DownloadIntentService.NO_DATA);
             }
 
             //ako tečajna lista postoju u bazi za odabrani datum
-            if (cursor.getCount() > 0 && !noData && !(Integer.parseInt(mjesec) < 10 && Integer.parseInt(godina) == 1997)) {
+            if (cursor.getCount() > 0 && !noData && !(Integer.parseInt(mjesec) < 10 && Integer.parseInt(
+                    godina) == 1997)) {
                 cursor.close();
-                Cursor cursorNew = getActivity().getContentResolver().query(uri, projection, "datum=?", new String[]{datum}, null);
+                Cursor cursorNew = getActivity().getContentResolver().query(uri, projection, "datum=?",
+                                                                            new String[]{datum}, null);
                 while (cursorNew.moveToNext()) {
 
-                    String zemlja = cursorNew.getString(cursorNew.getColumnIndexOrThrow(KonverzijaValutaDatabase.COL_ZEMLJA_VALUTA));
+                    String zemlja = cursorNew.getString(
+                            cursorNew.getColumnIndexOrThrow(KonverzijaDatabase.COL_ZEMLJA_VALUTA));
 
                     if (zemlja.substring(3, 6).equals(ulaznaValuta)) {
 
-                        kupovniUlaznaValuta = Double.parseDouble(cursorNew.getString(cursorNew.getColumnIndexOrThrow(KonverzijaValutaDatabase.COL_KUPOVNI)).replace(",", "."));
-                        srednjiUlaznaValuta = Double.parseDouble(cursorNew.getString(cursorNew.getColumnIndexOrThrow(KonverzijaValutaDatabase.COL_SREDNJI)).replace(",", "."));
-                        prodajniUlaznaValuta = Double.parseDouble(cursorNew.getString(cursorNew.getColumnIndexOrThrow(KonverzijaValutaDatabase.COL_PRODAJNI)).replace(",", "."));
+                        kupovniUlaznaValuta = Double.parseDouble(cursorNew.getString(
+                                cursorNew.getColumnIndexOrThrow(KonverzijaDatabase.COL_KUPOVNI)).replace(",",
+                                                                                                               "."));
+                        srednjiUlaznaValuta = Double.parseDouble(cursorNew.getString(
+                                cursorNew.getColumnIndexOrThrow(KonverzijaDatabase.COL_SREDNJI)).replace(",",
+                                                                                                               "."));
+                        prodajniUlaznaValuta = Double.parseDouble(cursorNew.getString(
+                                cursorNew.getColumnIndexOrThrow(KonverzijaDatabase.COL_PRODAJNI)).replace(",",
+                                                                                                                "."));
                         jedinicaUlazneValute = Double.parseDouble(zemlja.substring(6, 9));
                         Timber.i("ZEMLJA", zemlja);
                         Timber.i("ID", cursorNew.getString(0));
 
                     } else if (zemlja.substring(3, 6).equals(izlaznaValuta)) {
 
-                        kupovniIzlaznaaValuta = Double.parseDouble(cursorNew.getString(cursorNew.getColumnIndexOrThrow(KonverzijaValutaDatabase.COL_KUPOVNI)).replace(",", "."));
-                        srednjiIzlaznaValuta = Double.parseDouble(cursorNew.getString(cursorNew.getColumnIndexOrThrow(KonverzijaValutaDatabase.COL_SREDNJI)).replace(",", "."));
-                        prodajniIzlaznaValuta = Double.parseDouble(cursorNew.getString(cursorNew.getColumnIndexOrThrow(KonverzijaValutaDatabase.COL_PRODAJNI)).replace(",", "."));
+                        kupovniIzlaznaaValuta = Double.parseDouble(cursorNew.getString(
+                                cursorNew.getColumnIndexOrThrow(KonverzijaDatabase.COL_KUPOVNI)).replace(",",
+                                                                                                               "."));
+                        srednjiIzlaznaValuta = Double.parseDouble(cursorNew.getString(
+                                cursorNew.getColumnIndexOrThrow(KonverzijaDatabase.COL_SREDNJI)).replace(",",
+                                                                                                               "."));
+                        prodajniIzlaznaValuta = Double.parseDouble(cursorNew.getString(
+                                cursorNew.getColumnIndexOrThrow(KonverzijaDatabase.COL_PRODAJNI)).replace(",",
+                                                                                                                "."));
                         jedinicaIzlazneValute = Double.parseDouble(zemlja.substring(6, 9));
                         Timber.i("ZEMLJA", zemlja);
                         Timber.i("ID", cursorNew.getString(0));
@@ -286,34 +273,50 @@ public class DateChooseFragment extends Fragment {
                 Cursor cursorNew = getActivity().getContentResolver().query(uri, projection, null, null, null);
 
                 for (cursorNew.moveToLast(); !cursorNew.isBeforeFirst(); cursorNew.moveToPrevious()) {
-                    if (!cursorNew.getString(cursor.getColumnIndexOrThrow(KonverzijaValutaDatabase.COL_ZEMLJA_VALUTA)).equals(DownloadIntentService.NO_DATA)) {
-                        lastDate = cursorNew.getString(cursor.getColumnIndexOrThrow(KonverzijaValutaDatabase.COL_DATE));
+                    if (!cursorNew.getString(
+                            cursor.getColumnIndexOrThrow(KonverzijaDatabase.COL_ZEMLJA_VALUTA)).equals(
+                            DownloadIntentService.NO_DATA)) {
+                        lastDate = cursorNew.getString(cursor.getColumnIndexOrThrow(KonverzijaDatabase.COL_DATE));
                         break;
                     }
                 }
                 cursorNew.close();
 
-                Cursor cursorLastDate = getActivity().getContentResolver().query(uri, projection, "datum=?", new String[]{lastDate}, null);
+                Cursor cursorLastDate = getActivity().getContentResolver().query(uri, projection, "datum=?",
+                                                                                 new String[]{lastDate}, null);
 
                 if (cursorLastDate != null) {
                     while (cursorLastDate.moveToNext()) {
 
-                        String zemlja = cursorLastDate.getString(cursor.getColumnIndexOrThrow(KonverzijaValutaDatabase.COL_ZEMLJA_VALUTA));
+                        String zemlja = cursorLastDate.getString(
+                                cursor.getColumnIndexOrThrow(KonverzijaDatabase.COL_ZEMLJA_VALUTA));
 
                         if (zemlja.substring(3, 6).equals(ulaznaValuta)) {
 
-                            kupovniUlaznaValuta = Double.parseDouble(cursorLastDate.getString(cursor.getColumnIndexOrThrow(KonverzijaValutaDatabase.COL_KUPOVNI)).replace(",", "."));
-                            srednjiUlaznaValuta = Double.parseDouble(cursorLastDate.getString(cursor.getColumnIndexOrThrow(KonverzijaValutaDatabase.COL_SREDNJI)).replace(",", "."));
-                            prodajniUlaznaValuta = Double.parseDouble(cursorLastDate.getString(cursor.getColumnIndexOrThrow(KonverzijaValutaDatabase.COL_PRODAJNI)).replace(",", "."));
+                            kupovniUlaznaValuta = Double.parseDouble(cursorLastDate.getString(
+                                    cursor.getColumnIndexOrThrow(KonverzijaDatabase.COL_KUPOVNI)).replace(",",
+                                                                                                                "."));
+                            srednjiUlaznaValuta = Double.parseDouble(cursorLastDate.getString(
+                                    cursor.getColumnIndexOrThrow(KonverzijaDatabase.COL_SREDNJI)).replace(",",
+                                                                                                                "."));
+                            prodajniUlaznaValuta = Double.parseDouble(cursorLastDate.getString(
+                                    cursor.getColumnIndexOrThrow(KonverzijaDatabase.COL_PRODAJNI)).replace(",",
+                                                                                                                 "."));
                             jedinicaUlazneValute = Double.parseDouble(zemlja.substring(6, 9));
                             Timber.i("ZEMLJA", zemlja);
                             Timber.i("ID", cursorLastDate.getString(0));
 
                         } else if (zemlja.substring(3, 6).equals(izlaznaValuta)) {
 
-                            kupovniIzlaznaaValuta = Double.parseDouble(cursorLastDate.getString(cursor.getColumnIndexOrThrow(KonverzijaValutaDatabase.COL_KUPOVNI)).replace(",", "."));
-                            srednjiIzlaznaValuta = Double.parseDouble(cursorLastDate.getString(cursor.getColumnIndexOrThrow(KonverzijaValutaDatabase.COL_SREDNJI)).replace(",", "."));
-                            prodajniIzlaznaValuta = Double.parseDouble(cursorLastDate.getString(cursor.getColumnIndexOrThrow(KonverzijaValutaDatabase.COL_PRODAJNI)).replace(",", "."));
+                            kupovniIzlaznaaValuta = Double.parseDouble(cursorLastDate.getString(
+                                    cursor.getColumnIndexOrThrow(KonverzijaDatabase.COL_KUPOVNI)).replace(",",
+                                                                                                                "."));
+                            srednjiIzlaznaValuta = Double.parseDouble(cursorLastDate.getString(
+                                    cursor.getColumnIndexOrThrow(KonverzijaDatabase.COL_SREDNJI)).replace(",",
+                                                                                                                "."));
+                            prodajniIzlaznaValuta = Double.parseDouble(cursorLastDate.getString(
+                                    cursor.getColumnIndexOrThrow(KonverzijaDatabase.COL_PRODAJNI)).replace(",",
+                                                                                                                 "."));
                             jedinicaIzlazneValute = Double.parseDouble(zemlja.substring(6, 9));
                             Timber.i("ZEMLJA", zemlja);
                             Timber.i("ID", cursorLastDate.getString(0));
@@ -323,7 +326,9 @@ public class DateChooseFragment extends Fragment {
                     cursorLastDate.close();
                 }
                 showData.setText("Tečajna lista za taj dan još nije skinuta. Koristim zadnju dostupnu listu:" + "\n"
-                        + lastDate.substring(0, 2) + ". " + lastDate.substring(2, 4) + ". " + lastDate.substring(4, 8) + ".");
+                                         + lastDate.substring(0, 2) + ". " + lastDate.substring(2,
+                                                                                                4) + ". " + lastDate.substring(
+                        4, 8) + ".");
 
                 postoji = valutaPostoji(lastDate);
 
@@ -336,14 +341,14 @@ public class DateChooseFragment extends Fragment {
                 String id;
 
                 cursor.moveToFirst();
-                id = cursor.getString(cursor.getColumnIndexOrThrow(KonverzijaValutaDatabase.ID));
+                id = cursor.getString(cursor.getColumnIndexOrThrow(KonverzijaDatabase.ID));
                 cursor.close();
 
                 Cursor cursorNew = getActivity().getContentResolver().query(uri, projection, null, null, null);
 
                 while (cursorNew.moveToNext()) {
 
-                    String idNew = cursorNew.getString(cursor.getColumnIndexOrThrow(KonverzijaValutaDatabase.ID));
+                    String idNew = cursorNew.getString(cursor.getColumnIndexOrThrow(KonverzijaDatabase.ID));
                     if (idNew.equals(id)) {
                         position = cursorNew.getPosition();
                     }
@@ -351,46 +356,66 @@ public class DateChooseFragment extends Fragment {
                 }
 
                 for (cursorNew.moveToPosition(position); !cursorNew.isBeforeFirst(); cursorNew.moveToPrevious()) {
-                    if (!cursorNew.getString(cursor.getColumnIndexOrThrow(KonverzijaValutaDatabase.COL_ZEMLJA_VALUTA)).equals(DownloadIntentService.NO_DATA)) {
-                        date = cursorNew.getString(cursor.getColumnIndexOrThrow(KonverzijaValutaDatabase.COL_DATE));
+                    if (!cursorNew.getString(
+                            cursor.getColumnIndexOrThrow(KonverzijaDatabase.COL_ZEMLJA_VALUTA)).equals(
+                            DownloadIntentService.NO_DATA)) {
+                        date = cursorNew.getString(cursor.getColumnIndexOrThrow(KonverzijaDatabase.COL_DATE));
                         break;
                     }
                 }
                 cursorNew.close();
 
-                Cursor cursorLastDate = getActivity().getContentResolver().query(uri, projection, "datum=?", new String[]{date}, null);
+                Cursor cursorLastDate = getActivity().getContentResolver().query(uri, projection, "datum=?",
+                                                                                 new String[]{date}, null);
 
                 if (cursorLastDate != null) {
                     while (cursorLastDate.moveToNext()) {
 
-                        String zemlja = cursorLastDate.getString(cursor.getColumnIndexOrThrow(KonverzijaValutaDatabase.COL_ZEMLJA_VALUTA));
+                        String zemlja = cursorLastDate.getString(
+                                cursor.getColumnIndexOrThrow(KonverzijaDatabase.COL_ZEMLJA_VALUTA));
 
                         if (zemlja.substring(3, 6).equals(ulaznaValuta)) {
 
-                            kupovniUlaznaValuta = Double.parseDouble(cursorLastDate.getString(cursor.getColumnIndexOrThrow(KonverzijaValutaDatabase.COL_KUPOVNI)).replace(",", "."));
-                            srednjiUlaznaValuta = Double.parseDouble(cursorLastDate.getString(cursor.getColumnIndexOrThrow(KonverzijaValutaDatabase.COL_SREDNJI)).replace(",", "."));
-                            prodajniUlaznaValuta = Double.parseDouble(cursorLastDate.getString(cursor.getColumnIndexOrThrow(KonverzijaValutaDatabase.COL_PRODAJNI)).replace(",", "."));
+                            kupovniUlaznaValuta = Double.parseDouble(cursorLastDate.getString(
+                                    cursor.getColumnIndexOrThrow(KonverzijaDatabase.COL_KUPOVNI)).replace(",",
+                                                                                                                "."));
+                            srednjiUlaznaValuta = Double.parseDouble(cursorLastDate.getString(
+                                    cursor.getColumnIndexOrThrow(KonverzijaDatabase.COL_SREDNJI)).replace(",",
+                                                                                                                "."));
+                            prodajniUlaznaValuta = Double.parseDouble(cursorLastDate.getString(
+                                    cursor.getColumnIndexOrThrow(KonverzijaDatabase.COL_PRODAJNI)).replace(",",
+                                                                                                                 "."));
                             jedinicaUlazneValute = Double.parseDouble(zemlja.substring(6, 9));
                             Timber.i("ZEMLJA", zemlja);
                             Timber.i("ID", cursorLastDate.getString(0));
-                            Log.i("datum", String.valueOf(cursorLastDate.getColumnIndexOrThrow(KonverzijaValutaDatabase.COL_DATE)));
+                            Log.i("datum", String.valueOf(
+                                    cursorLastDate.getColumnIndexOrThrow(KonverzijaDatabase.COL_DATE)));
 
                         } else if (zemlja.substring(3, 6).equals(izlaznaValuta)) {
 
-                            kupovniIzlaznaaValuta = Double.parseDouble(cursorLastDate.getString(cursor.getColumnIndexOrThrow(KonverzijaValutaDatabase.COL_KUPOVNI)).replace(",", "."));
-                            srednjiIzlaznaValuta = Double.parseDouble(cursorLastDate.getString(cursor.getColumnIndexOrThrow(KonverzijaValutaDatabase.COL_SREDNJI)).replace(",", "."));
-                            prodajniIzlaznaValuta = Double.parseDouble(cursorLastDate.getString(cursor.getColumnIndexOrThrow(KonverzijaValutaDatabase.COL_PRODAJNI)).replace(",", "."));
+                            kupovniIzlaznaaValuta = Double.parseDouble(cursorLastDate.getString(
+                                    cursor.getColumnIndexOrThrow(KonverzijaDatabase.COL_KUPOVNI)).replace(",",
+                                                                                                                "."));
+                            srednjiIzlaznaValuta = Double.parseDouble(cursorLastDate.getString(
+                                    cursor.getColumnIndexOrThrow(KonverzijaDatabase.COL_SREDNJI)).replace(",",
+                                                                                                                "."));
+                            prodajniIzlaznaValuta = Double.parseDouble(cursorLastDate.getString(
+                                    cursor.getColumnIndexOrThrow(KonverzijaDatabase.COL_PRODAJNI)).replace(",",
+                                                                                                                 "."));
                             jedinicaIzlazneValute = Double.parseDouble(zemlja.substring(6, 9));
                             Timber.i("ZEMLJA", zemlja);
                             Timber.i("ID", cursorLastDate.getString(0));
-                            Log.i("datum", String.valueOf(cursorLastDate.getColumnIndexOrThrow(KonverzijaValutaDatabase.COL_DATE)));
+                            Log.i("datum", String.valueOf(
+                                    cursorLastDate.getColumnIndexOrThrow(KonverzijaDatabase.COL_DATE)));
 
                         }
                     }
                     cursorLastDate.close();
                 }
-                showData.setText("Nema tečajne liste za taj dan, koristim najbližu tečajnu listu prije odabranog datuma." + "\n"
-                        + date.substring(0, 2) + ". " + date.substring(2, 4) + ". " + date.substring(4, 8) + ".");
+                showData.setText(
+                        "Nema tečajne liste za taj dan, koristim najbližu tečajnu listu prije odabranog datuma." + "\n"
+                                + date.substring(0, 2) + ". " + date.substring(2, 4) + ". " + date.substring(4,
+                                                                                                             8) + ".");
 
                 postoji = valutaPostoji(date);
 
@@ -398,25 +423,39 @@ public class DateChooseFragment extends Fragment {
                 //(ako je odabran datum prije 1.10.1997.), koristi se prva dostupna lista, tj. 1.10.1997.
             } else if (Integer.parseInt(mjesec) < 10 && Integer.parseInt(godina) == 1997) {
 
-                Cursor cursorNew = getActivity().getContentResolver().query(uri, projection, "datum=?", new String[]{"01101997"}, null);
+                Cursor cursorNew = getActivity().getContentResolver().query(uri, projection, "datum=?",
+                                                                            new String[]{"01101997"}, null);
                 while (cursorNew.moveToNext()) {
 
-                    String zemlja = cursorNew.getString(cursorNew.getColumnIndexOrThrow(KonverzijaValutaDatabase.COL_ZEMLJA_VALUTA));
+                    String zemlja = cursorNew.getString(
+                            cursorNew.getColumnIndexOrThrow(KonverzijaDatabase.COL_ZEMLJA_VALUTA));
 
                     if (zemlja.substring(3, 6).equals(ulaznaValuta)) {
 
-                        kupovniUlaznaValuta = Double.parseDouble(cursorNew.getString(cursorNew.getColumnIndexOrThrow(KonverzijaValutaDatabase.COL_KUPOVNI)).replace(",", "."));
-                        srednjiUlaznaValuta = Double.parseDouble(cursorNew.getString(cursorNew.getColumnIndexOrThrow(KonverzijaValutaDatabase.COL_SREDNJI)).replace(",", "."));
-                        prodajniUlaznaValuta = Double.parseDouble(cursorNew.getString(cursorNew.getColumnIndexOrThrow(KonverzijaValutaDatabase.COL_PRODAJNI)).replace(",", "."));
+                        kupovniUlaznaValuta = Double.parseDouble(cursorNew.getString(
+                                cursorNew.getColumnIndexOrThrow(KonverzijaDatabase.COL_KUPOVNI)).replace(",",
+                                                                                                               "."));
+                        srednjiUlaznaValuta = Double.parseDouble(cursorNew.getString(
+                                cursorNew.getColumnIndexOrThrow(KonverzijaDatabase.COL_SREDNJI)).replace(",",
+                                                                                                               "."));
+                        prodajniUlaznaValuta = Double.parseDouble(cursorNew.getString(
+                                cursorNew.getColumnIndexOrThrow(KonverzijaDatabase.COL_PRODAJNI)).replace(",",
+                                                                                                                "."));
                         jedinicaUlazneValute = Double.parseDouble(zemlja.substring(6, 9));
                         Timber.i("ZEMLJA", zemlja);
                         Timber.i("ID", cursorNew.getString(0));
 
                     } else if (zemlja.substring(3, 6).equals(izlaznaValuta)) {
 
-                        kupovniIzlaznaaValuta = Double.parseDouble(cursorNew.getString(cursorNew.getColumnIndexOrThrow(KonverzijaValutaDatabase.COL_KUPOVNI)).replace(",", "."));
-                        srednjiIzlaznaValuta = Double.parseDouble(cursorNew.getString(cursorNew.getColumnIndexOrThrow(KonverzijaValutaDatabase.COL_SREDNJI)).replace(",", "."));
-                        prodajniIzlaznaValuta = Double.parseDouble(cursorNew.getString(cursorNew.getColumnIndexOrThrow(KonverzijaValutaDatabase.COL_PRODAJNI)).replace(",", "."));
+                        kupovniIzlaznaaValuta = Double.parseDouble(cursorNew.getString(
+                                cursorNew.getColumnIndexOrThrow(KonverzijaDatabase.COL_KUPOVNI)).replace(",",
+                                                                                                               "."));
+                        srednjiIzlaznaValuta = Double.parseDouble(cursorNew.getString(
+                                cursorNew.getColumnIndexOrThrow(KonverzijaDatabase.COL_SREDNJI)).replace(",",
+                                                                                                               "."));
+                        prodajniIzlaznaValuta = Double.parseDouble(cursorNew.getString(
+                                cursorNew.getColumnIndexOrThrow(KonverzijaDatabase.COL_PRODAJNI)).replace(",",
+                                                                                                                "."));
                         jedinicaIzlazneValute = Double.parseDouble(zemlja.substring(6, 9));
                         Timber.i("ZEMLJA", zemlja);
                         Timber.i("ID", cursorNew.getString(0));
@@ -425,7 +464,7 @@ public class DateChooseFragment extends Fragment {
                 }
                 cursorNew.close();
                 showData.setText("Nema tečejne liste za taj dan, koristim prvu dostupnu listu:" + "\n"
-                        + "01" + ". " + "10" + ". " + "1997" + ".");
+                                         + "01" + ". " + "10" + ". " + "1997" + ".");
                 postoji = valutaPostoji("01101997");
 
             }
@@ -499,19 +538,22 @@ public class DateChooseFragment extends Fragment {
 
 
                     //ispis ako ni ulazna ni izlazna valuta nisu HRK
-                } else if (!ulaznaValuta.equals(HRK) && !izlaznaValuta.equals(HRK) && !ulaznaValuta.equals(izlaznaValuta)) {
+                } else if (!ulaznaValuta.equals(HRK) && !izlaznaValuta.equals(HRK) && !ulaznaValuta.equals(
+                        izlaznaValuta)) {
 
                     rjesenjeSrednjiTecaj = unos * (srednjiUlaznaValuta / jedinicaUlazneValute) / (srednjiIzlaznaValuta / jedinicaIzlazneValute);
                     ispisSrednji = formater.format(rjesenjeSrednjiTecaj) + " " + izlaznaValuta;
 
-                    if (!kupovniUlaznaValuta.toString().equals("0.0") && !kupovniIzlaznaaValuta.toString().equals("0.0")) {
+                    if (!kupovniUlaznaValuta.toString().equals("0.0") && !kupovniIzlaznaaValuta.toString().equals(
+                            "0.0")) {
                         rjesenjeKupovniTecaj = unos * (kupovniUlaznaValuta / jedinicaUlazneValute) / (kupovniIzlaznaaValuta / jedinicaIzlazneValute);
                         ispisKupovni = formater.format(rjesenjeKupovniTecaj) + " " + izlaznaValuta;
                     } else {
                         ispisKupovni = ispisSrednji;
                     }
 
-                    if (!prodajniUlaznaValuta.toString().equals("0.0") && !prodajniIzlaznaValuta.toString().equals("0.0")) {
+                    if (!prodajniUlaznaValuta.toString().equals("0.0") && !prodajniIzlaznaValuta.toString().equals(
+                            "0.0")) {
                         rjesenjeProdajniTecaj = unos * (prodajniUlaznaValuta / jedinicaUlazneValute) / (prodajniIzlaznaValuta / jedinicaIzlazneValute);
                         ispisProdajni = formater.format(rjesenjeProdajniTecaj) + " " + izlaznaValuta;
                     } else {
@@ -536,6 +578,27 @@ public class DateChooseFragment extends Fragment {
         }
     }
 
+    private void startDownloadService() {
+        ConnectivityManager connMgr = (ConnectivityManager) getActivity().getSystemService(
+                Context.CONNECTIVITY_SERVICE);
+        NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
+
+        if (networkInfo != null && networkInfo.isConnected()) {
+
+            if (!isTaskRunning) {
+
+                isTaskRunning = true;
+
+                MainStartingActivity.progressBar.setVisibility(View.VISIBLE);
+                Intent msgIntent = new Intent(getActivity(), DownloadIntentService.class);
+                getActivity().startService(msgIntent);
+
+            }
+
+        } else {
+            Toast.makeText(getActivity(), "Nema internet konekcije", Toast.LENGTH_SHORT).show();
+        }
+    }
 
     public class ResponseReceiver extends BroadcastReceiver {
 
@@ -555,9 +618,11 @@ public class DateChooseFragment extends Fragment {
     }
 
     public static boolean isMyServiceRunning() {
-        ActivityManager manager = (ActivityManager) MainStartingActivity.context.getSystemService(Context.ACTIVITY_SERVICE);
+        ActivityManager manager = (ActivityManager) MainStartingActivity.context.getSystemService(
+                Context.ACTIVITY_SERVICE);
         for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
-            if ("com.example.ivan.konverzijavaluta.service.DownloadIntentService".equals(service.service.getClassName())) {
+            if ("com.example.ivan.konverzijavaluta.service.DownloadIntentService".equals(
+                    service.service.getClassName())) {
                 return true;
             }
         }
@@ -574,12 +639,13 @@ public class DateChooseFragment extends Fragment {
         if (lables.size() > getResources().getStringArray(R.array.valute).length) {
 
             dataAdapter = new ArrayAdapter<>(getActivity().getBaseContext(),
-                    android.R.layout.simple_spinner_item, lables);
+                                             android.R.layout.simple_spinner_item, lables);
 
         } else {
 
             dataAdapter = new ArrayAdapter<>(getActivity().getBaseContext(),
-                    android.R.layout.simple_spinner_item, getResources().getStringArray(R.array.valute));
+                                             android.R.layout.simple_spinner_item,
+                                             getResources().getStringArray(R.array.valute));
 
         }
 
@@ -599,12 +665,13 @@ public class DateChooseFragment extends Fragment {
         if (lables.size() > getResources().getStringArray(R.array.godine).length) {
 
             dataAdapter = new ArrayAdapter<>(getActivity().getBaseContext(),
-                    android.R.layout.simple_spinner_item, lables);
+                                             android.R.layout.simple_spinner_item, lables);
 
         } else {
 
             dataAdapter = new ArrayAdapter<>(getActivity().getBaseContext(),
-                    android.R.layout.simple_spinner_item, getResources().getStringArray(R.array.godine));
+                                             android.R.layout.simple_spinner_item,
+                                             getResources().getStringArray(R.array.godine));
 
         }
 
@@ -623,13 +690,13 @@ public class DateChooseFragment extends Fragment {
         String valuta;
 
         String[] projection = {
-                KonverzijaValutaDatabase.ID,
-                KonverzijaValutaDatabase.COL_DATE,
-                KonverzijaValutaDatabase.COL_ZEMLJA_VALUTA,
-                KonverzijaValutaDatabase.COL_KUPOVNI,
-                KonverzijaValutaDatabase.COL_SREDNJI,
-                KonverzijaValutaDatabase.COL_PRODAJNI};
-        Uri uri = Uri.parse(KonverzijaValutaProvider.CONTENT_URI + "/" + 1);
+                KonverzijaDatabase.ID,
+                KonverzijaDatabase.COL_DATE,
+                KonverzijaDatabase.COL_ZEMLJA_VALUTA,
+                KonverzijaDatabase.COL_KUPOVNI,
+                KonverzijaDatabase.COL_SREDNJI,
+                KonverzijaDatabase.COL_PRODAJNI};
+        Uri uri = Uri.parse(KonverzijaProvider.CONTENT_URI + "/" + 1);
 
         Cursor cursor = getActivity().getContentResolver().query(uri, projection, "datum=?", new String[]{datum}, null);
 
@@ -638,7 +705,7 @@ public class DateChooseFragment extends Fragment {
             if (cursor.getCount() > 0) {
                 ulaznaPostoji = false;
                 for (cursor.moveToFirst(); cursor.getPosition() < cursor.getCount(); cursor.moveToNext()) {
-                    valuta = cursor.getString(cursor.getColumnIndexOrThrow(KonverzijaValutaDatabase.COL_ZEMLJA_VALUTA));
+                    valuta = cursor.getString(cursor.getColumnIndexOrThrow(KonverzijaDatabase.COL_ZEMLJA_VALUTA));
                     if (valuta.substring(3, 6).equals(ulaznaValuta) || ulaznaValuta.equals("HRK")) {
                         ulaznaPostoji = true;
                         break;
@@ -646,7 +713,7 @@ public class DateChooseFragment extends Fragment {
                 }
                 izlaznaPostoji = false;
                 for (cursor.moveToFirst(); cursor.getPosition() < cursor.getCount(); cursor.moveToNext()) {
-                    valuta = cursor.getString(cursor.getColumnIndexOrThrow(KonverzijaValutaDatabase.COL_ZEMLJA_VALUTA));
+                    valuta = cursor.getString(cursor.getColumnIndexOrThrow(KonverzijaDatabase.COL_ZEMLJA_VALUTA));
                     if (valuta.substring(3, 6).equals(izlaznaValuta) || izlaznaValuta.equals("HRK")) {
                         izlaznaPostoji = true;
                         break;
@@ -685,7 +752,8 @@ public class DateChooseFragment extends Fragment {
             case R.id.action_refresh:
 
                 if (!isMyServiceRunning()) {
-                    ConnectivityManager connMgr = (ConnectivityManager) getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
+                    ConnectivityManager connMgr = (ConnectivityManager) getActivity().getSystemService(
+                            Context.CONNECTIVITY_SERVICE);
                     NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
 
                     if (networkInfo != null && networkInfo.isConnected()) {

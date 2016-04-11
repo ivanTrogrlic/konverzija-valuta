@@ -1,5 +1,9 @@
 apply plugin: 'com.android.application'
 
+def computeProviderAuthority(applicationId) {
+    return "\"" + applicationId + ".databse" + "\""
+}
+
 android {
     compileSdkVersion 22
     buildToolsVersion "22.0.1"
@@ -10,6 +14,9 @@ android {
         targetSdkVersion 22
         versionCode 1
         versionName "1.0"
+
+        resValue "string", "provider_authority", computeProviderAuthority(applicationId)
+        buildConfigField "String", "PROVIDER_AUTHORITY", computeProviderAuthority(applicationId)
     }
     buildTypes {
         release {

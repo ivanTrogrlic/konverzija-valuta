@@ -5,11 +5,11 @@ import android.content.ContentValues;
 import android.content.Intent;
 import android.util.Log;
 
-import com.example.ivan.konverzijavaluta.database.KonverzijaValutaDatabase;
+import com.example.ivan.konverzijavaluta.database.KonverzijaDatabase;
 import com.example.ivan.konverzijavaluta.entitet.Valute;
 import com.example.ivan.konverzijavaluta.main.DateChooseFragment;
 import com.example.ivan.konverzijavaluta.main.MainStartingActivity;
-import com.example.ivan.konverzijavaluta.provider.KonverzijaValutaProvider;
+import com.example.ivan.konverzijavaluta.provider.KonverzijaProvider;
 import com.squareup.okhttp.Call;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
@@ -33,8 +33,8 @@ import timber.log.Timber;
 public class DownloadIntentService extends IntentService {
 
     public static final String PARAM_OUT_MSG = "lista skinutih podataka";
-    public static final String NO_DATA = "NO_DATA";
-    static KonverzijaValutaDatabase db;
+    public static final String NO_DATA       = "NO_DATA";
+    static KonverzijaDatabase db;
 
     public DownloadIntentService() {
         super("DownloadIntentService");
@@ -78,7 +78,7 @@ public class DownloadIntentService extends IntentService {
             startingYear = Integer.parseInt(datumZadnjeUneseneListe.substring(4, 8));
             Log.i("Last entery", datumZadnjeUneseneListe);
 
-            MainStartingActivity.context.getContentResolver().delete(KonverzijaValutaProvider.CONTENT_URI, "datum=?", new String[]{datumZadnjeUneseneListe});
+            MainStartingActivity.context.getContentResolver().delete(KonverzijaProvider.CONTENT_URI, "datum=?", new String[]{datumZadnjeUneseneListe});
 
         }
 
@@ -165,12 +165,12 @@ public class DownloadIntentService extends IntentService {
         if (result.get(3).equals(NO_DATA)) {
 
             ContentValues values = new ContentValues();
-            values.put(KonverzijaValutaDatabase.COL_DATE, result.get(0) + result.get(1) + result.get(2));
-            values.put(KonverzijaValutaDatabase.COL_ZEMLJA_VALUTA, result.get(3));
-            values.put(KonverzijaValutaDatabase.COL_KUPOVNI, result.get(3));
-            values.put(KonverzijaValutaDatabase.COL_SREDNJI, result.get(3));
-            values.put(KonverzijaValutaDatabase.COL_PRODAJNI, result.get(3));
-            MainStartingActivity.context.getContentResolver().insert(KonverzijaValutaProvider.CONTENT_URI, values);
+            values.put(KonverzijaDatabase.COL_DATE, result.get(0) + result.get(1) + result.get(2));
+            values.put(KonverzijaDatabase.COL_ZEMLJA_VALUTA, result.get(3));
+            values.put(KonverzijaDatabase.COL_KUPOVNI, result.get(3));
+            values.put(KonverzijaDatabase.COL_SREDNJI, result.get(3));
+            values.put(KonverzijaDatabase.COL_PRODAJNI, result.get(3));
+            MainStartingActivity.context.getContentResolver().insert(KonverzijaProvider.CONTENT_URI, values);
 
         } else {
 
@@ -198,12 +198,12 @@ public class DownloadIntentService extends IntentService {
                             list.get(3));
 
                     ContentValues values = new ContentValues();
-                    values.put(KonverzijaValutaDatabase.COL_DATE, valute.getDatum());
-                    values.put(KonverzijaValutaDatabase.COL_ZEMLJA_VALUTA, valute.getZemlja());
-                    values.put(KonverzijaValutaDatabase.COL_KUPOVNI, valute.getKupovni());
-                    values.put(KonverzijaValutaDatabase.COL_SREDNJI, valute.getSrednji());
-                    values.put(KonverzijaValutaDatabase.COL_PRODAJNI, valute.getProdajni());
-                    MainStartingActivity.context.getContentResolver().insert(KonverzijaValutaProvider.CONTENT_URI, values);
+                    values.put(KonverzijaDatabase.COL_DATE, valute.getDatum());
+                    values.put(KonverzijaDatabase.COL_ZEMLJA_VALUTA, valute.getZemlja());
+                    values.put(KonverzijaDatabase.COL_KUPOVNI, valute.getKupovni());
+                    values.put(KonverzijaDatabase.COL_SREDNJI, valute.getSrednji());
+                    values.put(KonverzijaDatabase.COL_PRODAJNI, valute.getProdajni());
+                    MainStartingActivity.context.getContentResolver().insert(KonverzijaProvider.CONTENT_URI, values);
 
                     if (!db.valutaVecPostoji(valute.getZemlja().substring(3, 6))) {
 
