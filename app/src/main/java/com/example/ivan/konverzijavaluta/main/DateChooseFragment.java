@@ -28,7 +28,7 @@ import android.widget.Toast;
 
 import com.example.ivan.konverzijavaluta.R;
 import com.example.ivan.konverzijavaluta.database.KonverzijaDatabase;
-import com.example.ivan.konverzijavaluta.provider.KonverzijaProvider;
+import com.example.ivan.konverzijavaluta.database.KonverzijaProvider;
 import com.example.ivan.konverzijavaluta.service.DownloadIntentService;
 
 import java.text.NumberFormat;

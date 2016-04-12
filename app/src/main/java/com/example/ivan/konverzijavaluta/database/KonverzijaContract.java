@@ -14,6 +14,7 @@ public class KonverzijaContract {
     // Acception URI paths
     public static final String PATH_DRZAVA        = "drzava";
     public static final String PATH_TECAJNA_LISTA = "tecajna_lista";
+    public static final String PATH_DAN           = "dan";
 
     // Accepting URI query params
     public static final String QUERY_LIMIT_KEY = "limit";
@@ -51,9 +52,18 @@ public class KonverzijaContract {
 
         String _ID            = "_id";
         String DRZAVA_ID      = "drzava_id";
-        String DAN            = "dan";
+        String DAN_ID         = "dan_id";
         String KUPOVNI_TECAJ  = "kupovni_tecaj";
         String SREDNJI_TECAJ  = "srednji_tecaj";
         String PRODAJNI_TECAJ = "prodajkni_tecaj";
+    }
+
+    public interface Dan {
+
+        Uri CONTENT_URI = BASE_CONTENT_URI.buildUpon()
+                .appendPath(PATH_DAN)
+                .build();
+
+        String DAN = "dan";
     }
 }

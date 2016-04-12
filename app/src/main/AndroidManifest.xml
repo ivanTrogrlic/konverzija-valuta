@@ -20,10 +20,10 @@
         </activity>
 
         <provider
-            android:authorities="com.example.ivan.konverzijavaluta.provider.KonverzijaProvider"
+            android:authorities="com.example.ivan.konverzijavaluta.database.KonverzijaProvider"
             android:multiprocess="true"
             android:exported="false"
-            android:name=".provider.KonverzijaProvider"/>
+            android:name=".database.KonverzijaProvider"/>
 
         <service
             android:name=".service.DownloadIntentService"/>

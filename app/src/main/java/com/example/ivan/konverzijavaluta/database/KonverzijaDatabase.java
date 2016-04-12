@@ -4,8 +4,10 @@ import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
+import com.example.ivan.konverzijavaluta.database.KonverzijaContract.Dan;
 import com.example.ivan.konverzijavaluta.database.KonverzijaContract.Drzava;
 import com.example.ivan.konverzijavaluta.database.KonverzijaContract.TecajnaLista;
+import com.example.ivan.konverzijavaluta.util.DbUtils;
 
 
 public class KonverzijaDatabase extends SQLiteOpenHelper {
@@ -17,6 +19,7 @@ public class KonverzijaDatabase extends SQLiteOpenHelper {
     public interface Tables {
         String DRZAVA        = "drzava";
         String TECAJNA_LISTA = "tecajna_lista";
+        String DAN           = "dan";
     }
 
     public KonverzijaDatabase(Context context) {
@@ -27,6 +30,7 @@ public class KonverzijaDatabase extends SQLiteOpenHelper {
     public void onCreate(SQLiteDatabase db) {
         createDrzavaTable(db);
         createTecajnaListaTable(db);
+        createDanTable(db);
     }
 
     private void createDrzavaTable(SQLiteDatabase p_db) {
@@ -36,19 +40,28 @@ public class KonverzijaDatabase extends SQLiteOpenHelper {
                              + Drzava.VALUTA + " TEXT NOT NULL, "
                              + Drzava.JEDINICA + " INTEGER NOT NULL, "
                              // Unique columns
-                             + " UNIQUE (" + Drzava.SIFRA + ") "
-                             + " UNIQUE (" + Drzava.VALUTA + ")"
+                             + "UNIQUE (" + Drzava.SIFRA + ")"
+                             + "UNIQUE (" + Drzava.VALUTA + ")"
                              + " )");
     }
 
     private void createTecajnaListaTable(SQLiteDatabase p_db) {
         p_db.execSQL("CREATE TABLE " + Tables.TECAJNA_LISTA + " ("
                              + TecajnaLista._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
-                             + TecajnaLista.DRZAVA_ID + " INTEGER, "
-                             + TecajnaLista.DAN + " DATE NOT NULL, "
+                             + TecajnaLista.DRZAVA_ID + " INTEGER NOT NULL, "
+                             + TecajnaLista.DAN_ID + " DATE NOT NULL, "
                              + TecajnaLista.KUPOVNI_TECAJ + " TEXT NOT NULL, "
                              + TecajnaLista.SREDNJI_TECAJ + " TEXT NOT NULL, "
-                             + TecajnaLista.PRODAJNI_TECAJ + " TEXT NOT NULL, ");
+                             + TecajnaLista.PRODAJNI_TECAJ + " TEXT NOT NULL,"
+                             // Foreign keys
+                             + DbUtils.dbCreateForeignKey(TecajnaLista.DRZAVA_ID, Tables.DRZAVA, Drzava._ID)
+                             + DbUtils.dbCreateForeignKey(TecajnaLista.DAN_ID, Tables.DAN, Dan.DAN)
+                             + " )");
+    }
+
+    private void createDanTable(SQLiteDatabase p_db) {
+        p_db.execSQL("CREATE TABLE " + Tables.DAN + " ("
+                             + Tables.DAN + " DATE PRIMARY KEY " + " )");
     }
 
     @Override

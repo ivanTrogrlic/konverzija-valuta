@@ -9,7 +9,7 @@ import com.example.ivan.konverzijavaluta.database.KonverzijaDatabase;
 import com.example.ivan.konverzijavaluta.entitet.Valute;
 import com.example.ivan.konverzijavaluta.main.DateChooseFragment;
 import com.example.ivan.konverzijavaluta.main.MainStartingActivity;
-import com.example.ivan.konverzijavaluta.provider.KonverzijaProvider;
+import com.example.ivan.konverzijavaluta.database.KonverzijaProvider;
 import com.squareup.okhttp.Call;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
@@ -64,7 +64,7 @@ public class DownloadIntentService extends IntentService {
         InputStream is = null;
         ArrayList<String> contentAsString = new ArrayList<>();
 
-        int staringDay = 1, staringMonth = 10, startingYear = 1997;
+        int staringDay = 1, staringMonth = 10, startingYear = 1997;  //TODO
         String date = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
         int year = Integer.parseInt(date.substring(0, 4));
         int month = Integer.parseInt(date.substring(6, 7));

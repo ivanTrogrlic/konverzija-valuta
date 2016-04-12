@@ -1,4 +1,4 @@
-package com.example.ivan.konverzijavaluta.provider;
+package com.example.ivan.konverzijavaluta.database;
 
 import android.content.ContentProvider;
 import android.content.ContentValues;
@@ -11,6 +11,7 @@ import android.net.Uri;
 import android.text.TextUtils;
 
 import com.example.ivan.konverzijavaluta.database.KonverzijaContract;
+import com.example.ivan.konverzijavaluta.database.KonverzijaContract.Dan;
 import com.example.ivan.konverzijavaluta.database.KonverzijaContract.Drzava;
 import com.example.ivan.konverzijavaluta.database.KonverzijaContract.TecajnaLista;
 import com.example.ivan.konverzijavaluta.database.KonverzijaDatabase;
@@ -26,6 +27,8 @@ public class KonverzijaProvider extends ContentProvider {
     static final int DRZAVA_ID        = 101;
     static final int TECAJNA_LISTA    = 200;
     static final int TECAJNA_LISTA_ID = 201;
+    static final int DAN              = 300;
+    static final int DAN_ID           = 301;
 
     private static UriMatcher buildUriMatcher() {
         UriMatcher retVal = new UriMatcher(UriMatcher.NO_MATCH);
@@ -35,6 +38,9 @@ public class KonverzijaProvider extends ContentProvider {
 
         retVal.addURI(KonverzijaContract.AUTHORITY, "tecajna_lista", TECAJNA_LISTA);
         retVal.addURI(KonverzijaContract.AUTHORITY, "tecajna_lista/#", TECAJNA_LISTA_ID);
+
+        retVal.addURI(KonverzijaContract.AUTHORITY, "dan", DAN);
+        retVal.addURI(KonverzijaContract.AUTHORITY, "dan/#", DAN_ID);
 
         return retVal;
     }
@@ -59,6 +65,10 @@ public class KonverzijaProvider extends ContentProvider {
             case TECAJNA_LISTA_ID:
                 queryBuilder.appendWhere(TecajnaLista._ID + "=" + uri.getLastPathSegment());
             case TECAJNA_LISTA:
+                break;
+            case DAN_ID:
+                queryBuilder.appendWhere(Dan.DAN + "=" + uri.getLastPathSegment());
+            case DAN:
                 break;
         }
 
@@ -85,7 +95,11 @@ public class KonverzijaProvider extends ContentProvider {
             case TECAJNA_LISTA:
                 _id = db.insert(Tables.TECAJNA_LISTA, "", contentValues);
                 getContext().getContentResolver().notifyChange(uri, null, false);
-                return KonverzijaContract.buildUri(Drzava.CONTENT_URI, _id);
+                return KonverzijaContract.buildUri(TecajnaLista.CONTENT_URI, _id);
+            case DAN:
+                _id = db.insert(Tables.DAN, "", contentValues);
+                getContext().getContentResolver().notifyChange(uri, null, false);
+                return KonverzijaContract.buildUri(Dan.CONTENT_URI, _id);
             default:
                 throw new IllegalArgumentException("Unsupported URI: " + uri);
         }
@@ -113,6 +127,14 @@ public class KonverzijaProvider extends ContentProvider {
             case TECAJNA_LISTA_ID:
                 id = uri.getPathSegments().get(1);
                 count = db.delete(Tables.TECAJNA_LISTA, TecajnaLista._ID + " = " + id +
+                        (!TextUtils.isEmpty(selection) ? " AND (" + selection + ')' : ""), selectionArgs);
+                break;
+            case DAN:
+                count = db.delete(Tables.DAN, selection, selectionArgs);
+                break;
+            case DAN_ID:
+                id = uri.getPathSegments().get(1);
+                count = db.delete(Tables.DAN, Dan.DAN + " = " + id +
                         (!TextUtils.isEmpty(selection) ? " AND (" + selection + ')' : ""), selectionArgs);
                 break;
             default:
@@ -144,6 +166,13 @@ public class KonverzijaProvider extends ContentProvider {
                                   TecajnaLista._ID + " = " + uri.getPathSegments().get(1) +
                                           (!TextUtils.isEmpty(selection) ? " AND (" + selection + ')' : ""),
                                   selectionArgs);
+                break;
+            case DAN:
+                count = db.update(Tables.DAN, contentValues, selection, selectionArgs);
+                break;
+            case DAN_ID:
+                count = db.update(Tables.DAN, contentValues, Dan.DAN + " = " + uri.getPathSegments().get(1) +
+                        (!TextUtils.isEmpty(selection) ? " AND (" + selection + ')' : ""), selectionArgs);
                 break;
             default:
                 throw new IllegalArgumentException("Unsupported URI: " + uri);
