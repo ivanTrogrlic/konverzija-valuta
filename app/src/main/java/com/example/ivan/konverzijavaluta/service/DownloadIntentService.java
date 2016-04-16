@@ -1,15 +1,16 @@
 package com.example.ivan.konverzijavaluta.service;
 
 import android.app.IntentService;
-import android.content.ContentValues;
+import android.content.Context;
 import android.content.Intent;
-import android.util.Log;
 
-import com.example.ivan.konverzijavaluta.database.KonverzijaDatabase;
-import com.example.ivan.konverzijavaluta.entitet.Valute;
+import com.example.ivan.konverzijavaluta.entitet.Dan;
+import com.example.ivan.konverzijavaluta.entitet.Drzava;
+import com.example.ivan.konverzijavaluta.entitet.TecajnaLista;
 import com.example.ivan.konverzijavaluta.main.DateChooseFragment;
-import com.example.ivan.konverzijavaluta.main.MainStartingActivity;
-import com.example.ivan.konverzijavaluta.database.KonverzijaProvider;
+import com.example.ivan.konverzijavaluta.repository.DanRepository;
+import com.example.ivan.konverzijavaluta.repository.DrzavaRepository;
+import com.example.ivan.konverzijavaluta.repository.TecajnaListaRepository;
 import com.squareup.okhttp.Call;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
@@ -19,6 +20,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.math.BigDecimal;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -32,193 +34,197 @@ import timber.log.Timber;
 
 public class DownloadIntentService extends IntentService {
 
-    public static final String PARAM_OUT_MSG = "lista skinutih podataka";
+    public static final String PARAM_OUT_MSG = "lista_skinutih_podataka";
     public static final String NO_DATA       = "NO_DATA";
-    static KonverzijaDatabase db;
+    public static final int    START_DAY     = 1;
+    public static final int    START_MONTH   = 10;
+    public static final int    START_YEAR    = 1997;
+
+    DanRepository          m_danRepository;
+    DrzavaRepository       m_drzavaRepository;
+    TecajnaListaRepository m_tecajnaListaRepository;
 
     public DownloadIntentService() {
         super("DownloadIntentService");
     }
 
+    public static void startDownloading(Context p_context) {
+        Intent msgIntent = new Intent(p_context, DownloadIntentService.class);
+        p_context.startService(msgIntent);
+    }
+
     @Override
     protected void onHandleIntent(Intent intent) {
+        m_danRepository = new DanRepository(getContentResolver());
+        m_drzavaRepository = new DrzavaRepository(getContentResolver());
+        m_tecajnaListaRepository = new TecajnaListaRepository(getContentResolver());
 
-        db = DateChooseFragment.db;
-
-        ArrayList<String> list = new ArrayList<>();
+        String response = "Done downloading";
 
         try {
-            list = downloadUrl();
+            downloadUrl();
         } catch (IOException e) {
-            list.add("Unable to retrieve web page. URL may be invalid.");
+            Timber.e(e, e.getMessage());
+            response = "Unable to retrieve web page. URL may be invalid.";
         }
 
         Intent broadcastIntent = new Intent();
         broadcastIntent.setAction(DateChooseFragment.ResponseReceiver.ACTION_RESP);
         broadcastIntent.addCategory(Intent.CATEGORY_DEFAULT);
-        broadcastIntent.putStringArrayListExtra(PARAM_OUT_MSG, list);
+        broadcastIntent.putExtra(PARAM_OUT_MSG, response);
         sendBroadcast(broadcastIntent);
     }
 
-    protected static ArrayList<String> downloadUrl() throws IOException {
-        InputStream is = null;
-        ArrayList<String> contentAsString = new ArrayList<>();
-
-        int staringDay = 1, staringMonth = 10, startingYear = 1997;  //TODO
+    protected void downloadUrl() throws IOException {
+        int staringDay = START_DAY, staringMonth = START_MONTH, startingYear = START_YEAR;
         String date = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
-        int year = Integer.parseInt(date.substring(0, 4));
-        int month = Integer.parseInt(date.substring(6, 7));
-        int day = Integer.parseInt(date.substring(9, 10));
+        int currentYear = Integer.parseInt(date.substring(0, 4));
+        int currentMonth = Integer.parseInt(date.substring(6, 7));
+        int currentDay = Integer.parseInt(date.substring(9, 10));
 
-        if (db.chkDB()) {
 
-            String datumZadnjeUneseneListe = db.getLastEntry();
-            staringDay = Integer.parseInt(datumZadnjeUneseneListe.substring(0, 2));
-            staringMonth = Integer.parseInt(datumZadnjeUneseneListe.substring(2, 4));
-            startingYear = Integer.parseInt(datumZadnjeUneseneListe.substring(4, 8));
-            Log.i("Last entery", datumZadnjeUneseneListe);
-
-            MainStartingActivity.context.getContentResolver().delete(KonverzijaProvider.CONTENT_URI, "datum=?", new String[]{datumZadnjeUneseneListe});
-
+        Dan lastDan = m_danRepository.getLast();
+        if (lastDan != null) {
+            String lastDate = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(lastDan.getDan());
+            staringDay = Integer.parseInt(lastDate.substring(9, 10));
+            staringMonth = Integer.parseInt(lastDate.substring(6, 7));
+            startingYear = Integer.parseInt(lastDate.substring(0, 4));
         }
 
+        startDownloading(staringDay, staringMonth, startingYear, currentYear, currentMonth,
+                         currentDay, lastDan);
+    }
+
+    private ArrayList<String> startDownloading(int p_staringDay, int p_staringMonth, int p_startingYear,
+                                               int p_currentYear, int p_currentMonth, int p_currentDay,
+                                               Dan p_lastDan) throws IOException {
+        InputStream inputStream = null;
+        ArrayList<String> contentAsString = new ArrayList<>();
+
         outerloop:
-        for (int yearFor = startingYear; yearFor <= year; yearFor++) {
-            if (yearFor == 1997 && db.chkDB()) {
-                staringMonth = 10;
+        for (int yearFor = p_startingYear; yearFor <= p_currentYear; yearFor++) {
+            if (yearFor == START_YEAR && p_lastDan != null) {
+                p_staringMonth = START_MONTH;
             }
-            Log.i("Year", String.valueOf(yearFor));
-            for (int monthFor = staringMonth; monthFor <= 12; monthFor++) {
-                Log.i("Month", String.valueOf(monthFor));
-                for (int dayFor = staringDay; dayFor <= 31; dayFor++) {
-                    if (yearFor == year && monthFor == month && dayFor > day) {
+            for (int monthFor = p_staringMonth; monthFor <= 12; monthFor++) {
+                for (int dayFor = p_staringDay; dayFor <= 31; dayFor++) {
+                    if (yearFor == p_currentYear && monthFor == p_currentMonth && dayFor > p_currentDay) {
                         break outerloop;
                     }
 
                     try {
-                        URL url = new URL(getUrl(String.valueOf(dayFor), String.valueOf(monthFor - 1), String.valueOf(yearFor)));
-
-                        OkHttpClient client = new OkHttpClient();
-                        client.setConnectTimeout(10, TimeUnit.SECONDS);
-                        client.setReadTimeout(15, TimeUnit.SECONDS);
-                        Request request = new Request.Builder().url(url).build();
-                        Call call = client.newCall(request);
-                        Response response = call.execute();
+                        Response response = getTecajnaListaFromUrl(yearFor, monthFor, dayFor);
 
                         if (response.isSuccessful()) {
-
-                            is = response.body().byteStream();
-                            contentAsString = readIt(is);
-
-                        } else {
-
-                            if (dayFor < 10) {
-                                contentAsString.add("0" + String.valueOf(dayFor));
-                            } else {
-                                contentAsString.add(String.valueOf(dayFor));
-                            }
-                            if (monthFor < 10) {
-                                contentAsString.add("0" + String.valueOf(monthFor));
-                            } else {
-                                contentAsString.add(String.valueOf(monthFor));
-                            }
-                            contentAsString.add(String.valueOf(yearFor));
-                            contentAsString.add(NO_DATA);
-
+                            inputStream = response.body().byteStream();
+                            contentAsString = readInputStream(inputStream);
+                            addReceivedListToDB(contentAsString);
+                            contentAsString.clear();
                         }
-
-                        addRecievedListToDB(contentAsString);
-                        contentAsString.clear();
 
                     } finally {
-                        if (is != null) {
-                            is.close();
+                        if (inputStream != null) {
+                            inputStream.close();
                         }
                     }
-
                 }
-                staringDay = 1;
+                p_staringDay = 1;
             }
-            staringMonth = 1;
+            p_staringMonth = 1;
         }
-
         return contentAsString;
-
     }
 
-    protected static ArrayList<String> readIt(InputStream stream) throws IOException {
+    private Response getTecajnaListaFromUrl(int p_yearFor, int p_monthFor, int p_dayFor) throws IOException {
+        URL url = new URL(
+                getUrl(String.valueOf(p_dayFor), String.valueOf(p_monthFor - 1), String.valueOf(p_yearFor)));
+
+        OkHttpClient client = new OkHttpClient();
+        client.setConnectTimeout(10, TimeUnit.SECONDS);
+        client.setReadTimeout(15, TimeUnit.SECONDS);
+        Request request = new Request.Builder().url(url).build();
+        Call call = client.newCall(request);
+        return call.execute();
+    }
+
+    private ArrayList<String> readInputStream(InputStream stream) throws IOException {
 
         ArrayList<String> list = new ArrayList<>();
         BufferedReader br = new BufferedReader(new InputStreamReader(stream));
         String line;
         while ((line = br.readLine()) != null) {
             list.add(line);
-            Timber.i("Lajna", line);
+            Timber.i("Line: ", line);
         }
         return list;
     }
 
-    protected static void addRecievedListToDB(List<String> result) {
+    private void addReceivedListToDB(List<String> result) {
+        Dan dan = null;
 
-        String datum = "";
+        for (String details : result) {
+            StringBuilder builder = new StringBuilder();
+            builder.append(details);
 
-        if (result.get(3).equals(NO_DATA)) {
+            if (builder.toString().matches("\\b\\d{21}\\b")) {
+                dan = getDan(builder.substring(11, 19));
+                m_danRepository.insert(dan);
+            } else {
+                String[] dataArray;
+                String delimiter = "\\s+";
+                dataArray = builder.toString().split(delimiter);
+                List<String> list = Arrays.asList(dataArray);
 
-            ContentValues values = new ContentValues();
-            values.put(KonverzijaDatabase.COL_DATE, result.get(0) + result.get(1) + result.get(2));
-            values.put(KonverzijaDatabase.COL_ZEMLJA_VALUTA, result.get(3));
-            values.put(KonverzijaDatabase.COL_KUPOVNI, result.get(3));
-            values.put(KonverzijaDatabase.COL_SREDNJI, result.get(3));
-            values.put(KonverzijaDatabase.COL_PRODAJNI, result.get(3));
-            MainStartingActivity.context.getContentResolver().insert(KonverzijaProvider.CONTENT_URI, values);
-
-        } else {
-
-            for (String details : result) {
-                StringBuilder builder = new StringBuilder();
-                builder.append(details);
-
-                if (builder.toString().matches("\\b\\d{21}\\b")) {
-
-                    datum = builder.substring(11, 19);
-
+                Drzava drzava = getDrzava(list.get(0));
+                Drzava drzavaFromDb = m_drzavaRepository.getByValuta(drzava.getValuta());
+                if (drzavaFromDb == null) {
+                    m_drzavaRepository.insert(drzava);
                 } else {
-
-                    String[] dataArray;
-                    String delimiter = "\\s+";
-                    dataArray = builder.toString().split(delimiter);
-                    List<String> list = Arrays.asList(dataArray);
-                    Timber.i("Lista", String.valueOf(list.size()));
-                    Timber.i("Array", String.valueOf(dataArray.length));
-
-                    Valute valute = new Valute(datum,
-                            list.get(0),
-                            list.get(1),
-                            list.get(2),
-                            list.get(3));
-
-                    ContentValues values = new ContentValues();
-                    values.put(KonverzijaDatabase.COL_DATE, valute.getDatum());
-                    values.put(KonverzijaDatabase.COL_ZEMLJA_VALUTA, valute.getZemlja());
-                    values.put(KonverzijaDatabase.COL_KUPOVNI, valute.getKupovni());
-                    values.put(KonverzijaDatabase.COL_SREDNJI, valute.getSrednji());
-                    values.put(KonverzijaDatabase.COL_PRODAJNI, valute.getProdajni());
-                    MainStartingActivity.context.getContentResolver().insert(KonverzijaProvider.CONTENT_URI, values);
-
-                    if (!db.valutaVecPostoji(valute.getZemlja().substring(3, 6))) {
-
-                        db.addSamoValuta(valute.getZemlja().substring(3, 6));
-                        Log.i("Valuta", valute.getZemlja());
-
-                    }
-
+                    drzava = drzavaFromDb;
                 }
+
+                TecajnaLista tecajnaLista = getTecajnaLista(list, dan, drzava);
+                m_tecajnaListaRepository.insert(tecajnaLista);
             }
         }
     }
 
-    public static String getUrl(String day, String month, String year) {
+    private TecajnaLista getTecajnaLista(List<String> p_list, Dan p_dan, Drzava p_drzava) {
+        String kupovni = p_list.get(1).replaceAll(",", "/./");
+        String srednji = p_list.get(2).replaceAll(",", "/./");
+        String prodajni = p_list.get(3).replaceAll(",", "/./");
+        BigDecimal kupovniDecimal = new BigDecimal(kupovni);
+        BigDecimal srednjiDecimal = new BigDecimal(srednji);
+        BigDecimal prodajniDecimal = new BigDecimal(prodajni);
 
+        TecajnaLista tecajnaLista = new TecajnaLista();
+        tecajnaLista.setDan(p_dan);
+        tecajnaLista.setDrzava(p_drzava);
+        tecajnaLista.setKupovniTecaj(kupovniDecimal);
+        tecajnaLista.setSrednjiTecaj(srednjiDecimal);
+        tecajnaLista.setProidajniTecaj(prodajniDecimal);
+        return tecajnaLista;
+    }
+
+    private Drzava getDrzava(String zemlja) {
+        Drzava drzava = new Drzava();
+        drzava.setSifra(zemlja.substring(0, 3));
+        drzava.setValuta(zemlja.substring(3, 6));
+        drzava.setJedinica(Integer.parseInt(zemlja.substring(6, 9)));
+        return drzava;
+    }
+
+    private Dan getDan(String p_datum) {
+        int day = Integer.parseInt(p_datum.substring(0, 2));
+        int month = Integer.parseInt(p_datum.substring(2, 4));
+        int year = Integer.parseInt(p_datum.substring(4, 8));
+        Date date = new Date(year, month, day);
+        Dan dan = new Dan();
+        dan.setDan(date);
+        return dan;
+    }
+
+    public String getUrl(String day, String month, String year) {
         String URL = "http://www.hnb.hr/tecajn/f";
 
         int intMonth = Integer.parseInt(month) + 1;
@@ -232,8 +238,6 @@ public class DownloadIntentService extends IntentService {
         year = year.substring(2, 4);
 
         return URL + day + month + year + ".dat";
-
     }
 
 }
-

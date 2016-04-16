@@ -19,8 +19,15 @@ public class DanCursor extends AbstractCursor {
         m_contentResolver = p_contentResolver;
     }
 
+    // Use this constructor if you selected specified columns
+    public DanCursor(ContentResolver p_contentResolver, Cursor p_cursor, String p_columnPrefix) {
+        super(p_cursor, p_columnPrefix);
+        m_contentResolver = p_contentResolver;
+    }
+
     public Dan toDan() {
         Dan dan = new Dan();
+        dan.setId(getLong(KonverzijaContract.Dan._ID));
         dan.setDan(getDate(KonverzijaContract.Dan.DAN));
         return dan;
     }

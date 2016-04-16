@@ -10,11 +10,9 @@ import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
 import android.text.TextUtils;
 
-import com.example.ivan.konverzijavaluta.database.KonverzijaContract;
 import com.example.ivan.konverzijavaluta.database.KonverzijaContract.Dan;
 import com.example.ivan.konverzijavaluta.database.KonverzijaContract.Drzava;
 import com.example.ivan.konverzijavaluta.database.KonverzijaContract.TecajnaLista;
-import com.example.ivan.konverzijavaluta.database.KonverzijaDatabase;
 import com.example.ivan.konverzijavaluta.database.KonverzijaDatabase.Tables;
 
 
@@ -67,7 +65,7 @@ public class KonverzijaProvider extends ContentProvider {
             case TECAJNA_LISTA:
                 break;
             case DAN_ID:
-                queryBuilder.appendWhere(Dan.DAN + "=" + uri.getLastPathSegment());
+                queryBuilder.appendWhere(Dan._ID + "=" + uri.getLastPathSegment());
             case DAN:
                 break;
         }
@@ -134,7 +132,7 @@ public class KonverzijaProvider extends ContentProvider {
                 break;
             case DAN_ID:
                 id = uri.getPathSegments().get(1);
-                count = db.delete(Tables.DAN, Dan.DAN + " = " + id +
+                count = db.delete(Tables.DAN, Dan._ID + " = " + id +
                         (!TextUtils.isEmpty(selection) ? " AND (" + selection + ')' : ""), selectionArgs);
                 break;
             default:
@@ -171,7 +169,7 @@ public class KonverzijaProvider extends ContentProvider {
                 count = db.update(Tables.DAN, contentValues, selection, selectionArgs);
                 break;
             case DAN_ID:
-                count = db.update(Tables.DAN, contentValues, Dan.DAN + " = " + uri.getPathSegments().get(1) +
+                count = db.update(Tables.DAN, contentValues, Dan._ID + " = " + uri.getPathSegments().get(1) +
                         (!TextUtils.isEmpty(selection) ? " AND (" + selection + ')' : ""), selectionArgs);
                 break;
             default:

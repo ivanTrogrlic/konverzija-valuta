@@ -16,9 +16,6 @@ public class KonverzijaContract {
     public static final String PATH_TECAJNA_LISTA = "tecajna_lista";
     public static final String PATH_DAN           = "dan";
 
-    // Accepting URI query params
-    public static final String QUERY_LIMIT_KEY = "limit";
-
     public static Uri buildUri(Uri p_uri, Long p_id) {
         if (p_id == null) {
             p_id = -1l;
@@ -28,7 +25,7 @@ public class KonverzijaContract {
                 .build();
     }
 
-    public static Long getId(Uri p_uri) {
+    public static long getId(Uri p_uri) {
         return Long.valueOf(p_uri.getPathSegments().get(1));
     }
 
@@ -64,6 +61,7 @@ public class KonverzijaContract {
                 .appendPath(PATH_DAN)
                 .build();
 
+        String _ID = "_id";
         String DAN = "dan";
     }
 }

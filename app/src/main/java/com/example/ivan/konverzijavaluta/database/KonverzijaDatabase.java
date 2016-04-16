@@ -61,7 +61,11 @@ public class KonverzijaDatabase extends SQLiteOpenHelper {
 
     private void createDanTable(SQLiteDatabase p_db) {
         p_db.execSQL("CREATE TABLE " + Tables.DAN + " ("
-                             + Tables.DAN + " DATE PRIMARY KEY " + " )");
+                             + Dan._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
+                             + Dan.DAN + " DATE PRIMARY KEY "
+                             // Unique columns
+                             + "UNIQUE (" + Dan.DAN + ")"
+                             + " )");
     }
 
     @Override

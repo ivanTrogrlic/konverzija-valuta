@@ -42,26 +42,16 @@ import timber.log.Timber;
 
 public class DateChooseFragment extends Fragment {
 
-    @InjectView(R.id.tvShowData)
-    TextView showData;
-    @InjectView(R.id.tvIzlaznaVrijednost)
-    TextView izlaznaVrijednostSrednja;
-    @InjectView(R.id.tvIzlaznaVrijednostKupovna)
-    TextView izlaznaVrijednostKupovna;
-    @InjectView(R.id.tvIzlaznaVrijednostProdajna)
-    TextView izlaznaVrijednostProdajna;
-    @InjectView(R.id.etUlaznaVrijednost)
-    EditText ulaznaVrijednost;
-    @InjectView(R.id.sUlaznaValuta)
-    Spinner  ulaznaValutaSpinner;
-    @InjectView(R.id.sIzlaznaValuta)
-    Spinner  izlaznaValutaSpinner;
-    @InjectView(R.id.sDan)
-    Spinner  spinnerDan;
-    @InjectView(R.id.sMjesec)
-    Spinner  spinnerMjesec;
-    @InjectView(R.id.sGodina)
-    Spinner  spinnerGodina;
+    @InjectView(R.id.tvShowData)                  TextView showData;
+    @InjectView(R.id.tvIzlaznaVrijednost)         TextView izlaznaVrijednostSrednja;
+    @InjectView(R.id.tvIzlaznaVrijednostKupovna)  TextView izlaznaVrijednostKupovna;
+    @InjectView(R.id.tvIzlaznaVrijednostProdajna) TextView izlaznaVrijednostProdajna;
+    @InjectView(R.id.etUlaznaVrijednost)          EditText ulaznaVrijednost;
+    @InjectView(R.id.sUlaznaValuta)               Spinner  ulaznaValutaSpinner;
+    @InjectView(R.id.sIzlaznaValuta)              Spinner  izlaznaValutaSpinner;
+    @InjectView(R.id.sDan)                        Spinner  spinnerDan;
+    @InjectView(R.id.sMjesec)                     Spinner  spinnerMjesec;
+    @InjectView(R.id.sGodina)                     Spinner  spinnerGodina;
 
     public static final String SHOW_DATA = "show data";
     public static final String SREDNJA   = "srednja";
@@ -230,13 +220,13 @@ public class DateChooseFragment extends Fragment {
 
                         kupovniUlaznaValuta = Double.parseDouble(cursorNew.getString(
                                 cursorNew.getColumnIndexOrThrow(KonverzijaDatabase.COL_KUPOVNI)).replace(",",
-                                                                                                               "."));
+                                                                                                         "."));
                         srednjiUlaznaValuta = Double.parseDouble(cursorNew.getString(
                                 cursorNew.getColumnIndexOrThrow(KonverzijaDatabase.COL_SREDNJI)).replace(",",
-                                                                                                               "."));
+                                                                                                         "."));
                         prodajniUlaznaValuta = Double.parseDouble(cursorNew.getString(
                                 cursorNew.getColumnIndexOrThrow(KonverzijaDatabase.COL_PRODAJNI)).replace(",",
-                                                                                                                "."));
+                                                                                                          "."));
                         jedinicaUlazneValute = Double.parseDouble(zemlja.substring(6, 9));
                         Timber.i("ZEMLJA", zemlja);
                         Timber.i("ID", cursorNew.getString(0));
@@ -245,13 +235,13 @@ public class DateChooseFragment extends Fragment {
 
                         kupovniIzlaznaaValuta = Double.parseDouble(cursorNew.getString(
                                 cursorNew.getColumnIndexOrThrow(KonverzijaDatabase.COL_KUPOVNI)).replace(",",
-                                                                                                               "."));
+                                                                                                         "."));
                         srednjiIzlaznaValuta = Double.parseDouble(cursorNew.getString(
                                 cursorNew.getColumnIndexOrThrow(KonverzijaDatabase.COL_SREDNJI)).replace(",",
-                                                                                                               "."));
+                                                                                                         "."));
                         prodajniIzlaznaValuta = Double.parseDouble(cursorNew.getString(
                                 cursorNew.getColumnIndexOrThrow(KonverzijaDatabase.COL_PRODAJNI)).replace(",",
-                                                                                                                "."));
+                                                                                                          "."));
                         jedinicaIzlazneValute = Double.parseDouble(zemlja.substring(6, 9));
                         Timber.i("ZEMLJA", zemlja);
                         Timber.i("ID", cursorNew.getString(0));
@@ -295,13 +285,13 @@ public class DateChooseFragment extends Fragment {
 
                             kupovniUlaznaValuta = Double.parseDouble(cursorLastDate.getString(
                                     cursor.getColumnIndexOrThrow(KonverzijaDatabase.COL_KUPOVNI)).replace(",",
-                                                                                                                "."));
+                                                                                                          "."));
                             srednjiUlaznaValuta = Double.parseDouble(cursorLastDate.getString(
                                     cursor.getColumnIndexOrThrow(KonverzijaDatabase.COL_SREDNJI)).replace(",",
-                                                                                                                "."));
+                                                                                                          "."));
                             prodajniUlaznaValuta = Double.parseDouble(cursorLastDate.getString(
                                     cursor.getColumnIndexOrThrow(KonverzijaDatabase.COL_PRODAJNI)).replace(",",
-                                                                                                                 "."));
+                                                                                                           "."));
                             jedinicaUlazneValute = Double.parseDouble(zemlja.substring(6, 9));
                             Timber.i("ZEMLJA", zemlja);
                             Timber.i("ID", cursorLastDate.getString(0));
@@ -310,13 +300,13 @@ public class DateChooseFragment extends Fragment {
 
                             kupovniIzlaznaaValuta = Double.parseDouble(cursorLastDate.getString(
                                     cursor.getColumnIndexOrThrow(KonverzijaDatabase.COL_KUPOVNI)).replace(",",
-                                                                                                                "."));
+                                                                                                          "."));
                             srednjiIzlaznaValuta = Double.parseDouble(cursorLastDate.getString(
                                     cursor.getColumnIndexOrThrow(KonverzijaDatabase.COL_SREDNJI)).replace(",",
-                                                                                                                "."));
+                                                                                                          "."));
                             prodajniIzlaznaValuta = Double.parseDouble(cursorLastDate.getString(
                                     cursor.getColumnIndexOrThrow(KonverzijaDatabase.COL_PRODAJNI)).replace(",",
-                                                                                                                 "."));
+                                                                                                           "."));
                             jedinicaIzlazneValute = Double.parseDouble(zemlja.substring(6, 9));
                             Timber.i("ZEMLJA", zemlja);
                             Timber.i("ID", cursorLastDate.getString(0));
@@ -378,13 +368,13 @@ public class DateChooseFragment extends Fragment {
 
                             kupovniUlaznaValuta = Double.parseDouble(cursorLastDate.getString(
                                     cursor.getColumnIndexOrThrow(KonverzijaDatabase.COL_KUPOVNI)).replace(",",
-                                                                                                                "."));
+                                                                                                          "."));
                             srednjiUlaznaValuta = Double.parseDouble(cursorLastDate.getString(
                                     cursor.getColumnIndexOrThrow(KonverzijaDatabase.COL_SREDNJI)).replace(",",
-                                                                                                                "."));
+                                                                                                          "."));
                             prodajniUlaznaValuta = Double.parseDouble(cursorLastDate.getString(
                                     cursor.getColumnIndexOrThrow(KonverzijaDatabase.COL_PRODAJNI)).replace(",",
-                                                                                                                 "."));
+                                                                                                           "."));
                             jedinicaUlazneValute = Double.parseDouble(zemlja.substring(6, 9));
                             Timber.i("ZEMLJA", zemlja);
                             Timber.i("ID", cursorLastDate.getString(0));
@@ -395,13 +385,13 @@ public class DateChooseFragment extends Fragment {
 
                             kupovniIzlaznaaValuta = Double.parseDouble(cursorLastDate.getString(
                                     cursor.getColumnIndexOrThrow(KonverzijaDatabase.COL_KUPOVNI)).replace(",",
-                                                                                                                "."));
+                                                                                                          "."));
                             srednjiIzlaznaValuta = Double.parseDouble(cursorLastDate.getString(
                                     cursor.getColumnIndexOrThrow(KonverzijaDatabase.COL_SREDNJI)).replace(",",
-                                                                                                                "."));
+                                                                                                          "."));
                             prodajniIzlaznaValuta = Double.parseDouble(cursorLastDate.getString(
                                     cursor.getColumnIndexOrThrow(KonverzijaDatabase.COL_PRODAJNI)).replace(",",
-                                                                                                                 "."));
+                                                                                                           "."));
                             jedinicaIzlazneValute = Double.parseDouble(zemlja.substring(6, 9));
                             Timber.i("ZEMLJA", zemlja);
                             Timber.i("ID", cursorLastDate.getString(0));
@@ -434,13 +424,13 @@ public class DateChooseFragment extends Fragment {
 
                         kupovniUlaznaValuta = Double.parseDouble(cursorNew.getString(
                                 cursorNew.getColumnIndexOrThrow(KonverzijaDatabase.COL_KUPOVNI)).replace(",",
-                                                                                                               "."));
+                                                                                                         "."));
                         srednjiUlaznaValuta = Double.parseDouble(cursorNew.getString(
                                 cursorNew.getColumnIndexOrThrow(KonverzijaDatabase.COL_SREDNJI)).replace(",",
-                                                                                                               "."));
+                                                                                                         "."));
                         prodajniUlaznaValuta = Double.parseDouble(cursorNew.getString(
                                 cursorNew.getColumnIndexOrThrow(KonverzijaDatabase.COL_PRODAJNI)).replace(",",
-                                                                                                                "."));
+                                                                                                          "."));
                         jedinicaUlazneValute = Double.parseDouble(zemlja.substring(6, 9));
                         Timber.i("ZEMLJA", zemlja);
                         Timber.i("ID", cursorNew.getString(0));
@@ -449,13 +439,13 @@ public class DateChooseFragment extends Fragment {
 
                         kupovniIzlaznaaValuta = Double.parseDouble(cursorNew.getString(
                                 cursorNew.getColumnIndexOrThrow(KonverzijaDatabase.COL_KUPOVNI)).replace(",",
-                                                                                                               "."));
+                                                                                                         "."));
                         srednjiIzlaznaValuta = Double.parseDouble(cursorNew.getString(
                                 cursorNew.getColumnIndexOrThrow(KonverzijaDatabase.COL_SREDNJI)).replace(",",
-                                                                                                               "."));
+                                                                                                         "."));
                         prodajniIzlaznaValuta = Double.parseDouble(cursorNew.getString(
                                 cursorNew.getColumnIndexOrThrow(KonverzijaDatabase.COL_PRODAJNI)).replace(",",
-                                                                                                                "."));
+                                                                                                          "."));
                         jedinicaIzlazneValute = Double.parseDouble(zemlja.substring(6, 9));
                         Timber.i("ZEMLJA", zemlja);
                         Timber.i("ID", cursorNew.getString(0));

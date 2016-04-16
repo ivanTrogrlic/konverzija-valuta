@@ -1,16 +1,18 @@
 package com.example.ivan.konverzijavaluta.entitet;
 
+import java.math.BigDecimal;
+
 /**
  * Created by Ivan on 12.4.2016..
  */
 public class TecajnaLista {
 
-    private int    id;
-    private Drzava drzava;
-    private Dan    dan;
-    private String kupovniTecaj;
-    private String srednjiTecaj;
-    private String proidajniTecaj;
+    private long       id;
+    private Drzava     drzava;
+    private Dan        dan;
+    private BigDecimal kupovniTecaj;
+    private BigDecimal srednjiTecaj;
+    private BigDecimal proidajniTecaj;
 
     public Dan getDan() {
         return dan;
@@ -28,35 +30,35 @@ public class TecajnaLista {
         drzava = p_drzava;
     }
 
-    public int getId() {
+    public long getId() {
         return id;
     }
 
-    public void setId(int p_id) {
+    public void setId(long p_id) {
         id = p_id;
     }
 
-    public String getKupovniTecaj() {
+    public BigDecimal getKupovniTecaj() {
         return kupovniTecaj;
     }
 
-    public void setKupovniTecaj(String p_kupovniTecaj) {
+    public void setKupovniTecaj(BigDecimal p_kupovniTecaj) {
         kupovniTecaj = p_kupovniTecaj;
     }
 
-    public String getProidajniTecaj() {
+    public BigDecimal getProidajniTecaj() {
         return proidajniTecaj;
     }
 
-    public void setProidajniTecaj(String p_proidajniTecaj) {
+    public void setProidajniTecaj(BigDecimal p_proidajniTecaj) {
         proidajniTecaj = p_proidajniTecaj;
     }
 
-    public String getSrednjiTecaj() {
+    public BigDecimal getSrednjiTecaj() {
         return srednjiTecaj;
     }
 
-    public void setSrednjiTecaj(String p_srednjiTecaj) {
+    public void setSrednjiTecaj(BigDecimal p_srednjiTecaj) {
         srednjiTecaj = p_srednjiTecaj;
     }
 
@@ -78,7 +80,7 @@ public class TecajnaLista {
 
     @Override
     public int hashCode() {
-        int result = id;
+        int result = (int) (id ^ (id >>> 32));
         result = 31 * result + drzava.hashCode();
         result = 31 * result + dan.hashCode();
         result = 31 * result + kupovniTecaj.hashCode();

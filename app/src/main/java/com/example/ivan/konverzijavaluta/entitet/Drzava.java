@@ -5,16 +5,16 @@ package com.example.ivan.konverzijavaluta.entitet;
  */
 public class Drzava {
 
-    private int    id;
+    private long   id;
     private String sifra;
     private String valuta;
     private int    jedinica;
 
-    public int getId() {
+    public long getId() {
         return id;
     }
 
-    public void setId(int p_id) {
+    public void setId(long p_id) {
         id = p_id;
     }
 
@@ -58,7 +58,7 @@ public class Drzava {
 
     @Override
     public int hashCode() {
-        int result = id;
+        int result = (int) (id ^ (id >>> 32));
         result = 31 * result + sifra.hashCode();
         result = 31 * result + valuta.hashCode();
         result = 31 * result + jedinica;

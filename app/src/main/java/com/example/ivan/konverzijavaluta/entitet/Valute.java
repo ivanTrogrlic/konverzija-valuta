@@ -6,7 +6,7 @@ import android.os.Parcelable;
 
 public class Valute implements Parcelable {
 
-    private int id;
+    private int    id;
     private String kupovni, prodajni, srednji, zemlja, datum;
 
     public Valute() {
