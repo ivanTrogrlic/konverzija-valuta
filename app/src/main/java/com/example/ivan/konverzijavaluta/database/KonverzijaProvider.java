@@ -53,20 +53,28 @@ public class KonverzijaProvider extends ContentProvider {
     public Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
         SQLiteDatabase db = m_sqLiteHelper.getReadableDatabase();
         SQLiteQueryBuilder queryBuilder = new SQLiteQueryBuilder();
-        queryBuilder.setTables(Tables.DRZAVA);
 
         switch (URI_MATCHER.match(uri)) {
             case DRZAVA_ID:
+                queryBuilder.setTables(Tables.DRZAVA);
                 queryBuilder.appendWhere(Drzava._ID + "=" + uri.getLastPathSegment());
+                break;
             case DRZAVA:
+                queryBuilder.setTables(Tables.DRZAVA);
                 break;
             case TECAJNA_LISTA_ID:
+                queryBuilder.setTables(Tables.TECAJNA_LISTA);
                 queryBuilder.appendWhere(TecajnaLista._ID + "=" + uri.getLastPathSegment());
+                break;
             case TECAJNA_LISTA:
+                queryBuilder.setTables(Tables.TECAJNA_LISTA);
                 break;
             case DAN_ID:
+                queryBuilder.setTables(Tables.DAN);
                 queryBuilder.appendWhere(Dan._ID + "=" + uri.getLastPathSegment());
+                break;
             case DAN:
+                queryBuilder.setTables(Tables.DAN);
                 break;
         }
 
@@ -87,15 +95,15 @@ public class KonverzijaProvider extends ContentProvider {
         long _id;
         switch (URI_MATCHER.match(uri)) {
             case DRZAVA:
-                _id = db.insert(Tables.DRZAVA, "", contentValues);
+                _id = db.insertOrThrow(Tables.DRZAVA, "", contentValues);
                 getContext().getContentResolver().notifyChange(uri, null, false);
                 return KonverzijaContract.buildUri(Drzava.CONTENT_URI, _id);
             case TECAJNA_LISTA:
-                _id = db.insert(Tables.TECAJNA_LISTA, "", contentValues);
+                _id = db.insertOrThrow(Tables.TECAJNA_LISTA, "", contentValues);
                 getContext().getContentResolver().notifyChange(uri, null, false);
                 return KonverzijaContract.buildUri(TecajnaLista.CONTENT_URI, _id);
             case DAN:
-                _id = db.insert(Tables.DAN, "", contentValues);
+                _id = db.insertOrThrow(Tables.DAN, "", contentValues);
                 getContext().getContentResolver().notifyChange(uri, null, false);
                 return KonverzijaContract.buildUri(Dan.CONTENT_URI, _id);
             default:

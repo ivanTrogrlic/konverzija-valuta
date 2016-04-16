@@ -49,7 +49,7 @@ public class KonverzijaDatabase extends SQLiteOpenHelper {
         p_db.execSQL("CREATE TABLE " + Tables.TECAJNA_LISTA + " ("
                              + TecajnaLista._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
                              + TecajnaLista.DRZAVA_ID + " INTEGER NOT NULL, "
-                             + TecajnaLista.DAN_ID + " DATE NOT NULL, "
+                             + TecajnaLista.DAN_ID + " INTEGER NOT NULL, "
                              + TecajnaLista.KUPOVNI_TECAJ + " TEXT NOT NULL, "
                              + TecajnaLista.SREDNJI_TECAJ + " TEXT NOT NULL, "
                              + TecajnaLista.PRODAJNI_TECAJ + " TEXT NOT NULL,"
@@ -62,7 +62,7 @@ public class KonverzijaDatabase extends SQLiteOpenHelper {
     private void createDanTable(SQLiteDatabase p_db) {
         p_db.execSQL("CREATE TABLE " + Tables.DAN + " ("
                              + Dan._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
-                             + Dan.DAN + " DATE PRIMARY KEY "
+                             + Dan.DAN + " DATE NOT NULL, "
                              // Unique columns
                              + "UNIQUE (" + Dan.DAN + ")"
                              + " )");

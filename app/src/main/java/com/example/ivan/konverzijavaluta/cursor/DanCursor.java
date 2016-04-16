@@ -7,6 +7,8 @@ import com.example.ivan.konverzijavaluta.database.KonverzijaContract;
 import com.example.ivan.konverzijavaluta.entitet.Dan;
 import com.example.ivan.konverzijavaluta.util.AbstractCursor;
 
+import org.joda.time.LocalDate;
+
 /**
  * Created by Ivan on 12.4.2016..
  */
@@ -28,7 +30,7 @@ public class DanCursor extends AbstractCursor {
     public Dan toDan() {
         Dan dan = new Dan();
         dan.setId(getLong(KonverzijaContract.Dan._ID));
-        dan.setDan(getDate(KonverzijaContract.Dan.DAN));
+        dan.setDan(new LocalDate(getDate(KonverzijaContract.Dan.DAN)));
         return dan;
     }
 }

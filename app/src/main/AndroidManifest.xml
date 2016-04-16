@@ -1,10 +1,12 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.ivan.konverzijavaluta">
+<manifest
+    package="com.example.ivan.konverzijavaluta"
+    xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <application
+        android:name=".main.KonverzijaValutaApplication"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
@@ -20,13 +22,12 @@
         </activity>
 
         <provider
-            android:authorities="com.example.ivan.konverzijavaluta.database.KonverzijaProvider"
-            android:multiprocess="true"
+            android:name=".database.KonverzijaProvider"
+            android:authorities="@string/provider_authority"
             android:exported="false"
-            android:name=".database.KonverzijaProvider"/>
+            android:multiprocess="true" />
 
-        <service
-            android:name=".service.DownloadIntentService"/>
+        <service android:name=".service.DownloadIntentService" />
 
     </application>
 

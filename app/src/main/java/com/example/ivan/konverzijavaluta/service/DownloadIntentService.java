@@ -16,6 +16,8 @@ import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
 
+import org.joda.time.LocalDate;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -85,9 +87,10 @@ public class DownloadIntentService extends IntentService {
 
         Dan lastDan = m_danRepository.getLast();
         if (lastDan != null) {
-            String lastDate = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(lastDan.getDan());
-            staringDay = Integer.parseInt(lastDate.substring(9, 10));
-            staringMonth = Integer.parseInt(lastDate.substring(6, 7));
+            LocalDate nextDay = lastDan.getDan().plusDays(1);
+            String lastDate = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(nextDay.toDate());
+            staringDay = Integer.parseInt(lastDate.substring(8, 10));
+            staringMonth = Integer.parseInt(lastDate.substring(5, 7));
             startingYear = Integer.parseInt(lastDate.substring(0, 4));
         }
 
@@ -140,8 +143,8 @@ public class DownloadIntentService extends IntentService {
                 getUrl(String.valueOf(p_dayFor), String.valueOf(p_monthFor - 1), String.valueOf(p_yearFor)));
 
         OkHttpClient client = new OkHttpClient();
-        client.setConnectTimeout(10, TimeUnit.SECONDS);
-        client.setReadTimeout(15, TimeUnit.SECONDS);
+        client.setConnectTimeout(100, TimeUnit.SECONDS);
+        client.setReadTimeout(100, TimeUnit.SECONDS);
         Request request = new Request.Builder().url(url).build();
         Call call = client.newCall(request);
         return call.execute();
@@ -168,7 +171,8 @@ public class DownloadIntentService extends IntentService {
 
             if (builder.toString().matches("\\b\\d{21}\\b")) {
                 dan = getDan(builder.substring(11, 19));
-                m_danRepository.insert(dan);
+                Long danId = m_danRepository.insert(dan);
+                dan.setId(danId);
             } else {
                 String[] dataArray;
                 String delimiter = "\\s+";
@@ -178,7 +182,8 @@ public class DownloadIntentService extends IntentService {
                 Drzava drzava = getDrzava(list.get(0));
                 Drzava drzavaFromDb = m_drzavaRepository.getByValuta(drzava.getValuta());
                 if (drzavaFromDb == null) {
-                    m_drzavaRepository.insert(drzava);
+                    Long drzavaId = m_drzavaRepository.insert(drzava);
+                    drzava.setId(drzavaId);
                 } else {
                     drzava = drzavaFromDb;
                 }
@@ -190,9 +195,9 @@ public class DownloadIntentService extends IntentService {
     }
 
     private TecajnaLista getTecajnaLista(List<String> p_list, Dan p_dan, Drzava p_drzava) {
-        String kupovni = p_list.get(1).replaceAll(",", "/./");
-        String srednji = p_list.get(2).replaceAll(",", "/./");
-        String prodajni = p_list.get(3).replaceAll(",", "/./");
+        String kupovni = p_list.get(1).replaceAll(",", ".");
+        String srednji = p_list.get(2).replaceAll(",", ".");
+        String prodajni = p_list.get(3).replaceAll(",", ".");
         BigDecimal kupovniDecimal = new BigDecimal(kupovni);
         BigDecimal srednjiDecimal = new BigDecimal(srednji);
         BigDecimal prodajniDecimal = new BigDecimal(prodajni);
@@ -202,7 +207,7 @@ public class DownloadIntentService extends IntentService {
         tecajnaLista.setDrzava(p_drzava);
         tecajnaLista.setKupovniTecaj(kupovniDecimal);
         tecajnaLista.setSrednjiTecaj(srednjiDecimal);
-        tecajnaLista.setProidajniTecaj(prodajniDecimal);
+        tecajnaLista.setProdajniTecaj(prodajniDecimal);
         return tecajnaLista;
     }
 
@@ -218,14 +223,14 @@ public class DownloadIntentService extends IntentService {
         int day = Integer.parseInt(p_datum.substring(0, 2));
         int month = Integer.parseInt(p_datum.substring(2, 4));
         int year = Integer.parseInt(p_datum.substring(4, 8));
-        Date date = new Date(year, month, day);
+        LocalDate date = new LocalDate(year, month, day);
         Dan dan = new Dan();
         dan.setDan(date);
         return dan;
     }
 
     public String getUrl(String day, String month, String year) {
-        String URL = "http://www.hnb.hr/tecajn/f";
+        String URL = "http://old.hnb.hr/tecajn/f";
 
         int intMonth = Integer.parseInt(month) + 1;
         month = String.valueOf(intMonth);

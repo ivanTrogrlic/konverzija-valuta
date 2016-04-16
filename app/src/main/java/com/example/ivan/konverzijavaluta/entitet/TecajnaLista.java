@@ -7,12 +7,12 @@ import java.math.BigDecimal;
  */
 public class TecajnaLista {
 
-    private long       id;
+    private Long       id;
     private Drzava     drzava;
     private Dan        dan;
     private BigDecimal kupovniTecaj;
     private BigDecimal srednjiTecaj;
-    private BigDecimal proidajniTecaj;
+    private BigDecimal prodajniTecaj;
 
     public Dan getDan() {
         return dan;
@@ -30,11 +30,11 @@ public class TecajnaLista {
         drzava = p_drzava;
     }
 
-    public long getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(long p_id) {
+    public void setId(Long p_id) {
         id = p_id;
     }
 
@@ -46,12 +46,12 @@ public class TecajnaLista {
         kupovniTecaj = p_kupovniTecaj;
     }
 
-    public BigDecimal getProidajniTecaj() {
-        return proidajniTecaj;
+    public BigDecimal getProdajniTecaj() {
+        return prodajniTecaj;
     }
 
-    public void setProidajniTecaj(BigDecimal p_proidajniTecaj) {
-        proidajniTecaj = p_proidajniTecaj;
+    public void setProdajniTecaj(BigDecimal p_prodajniTecaj) {
+        prodajniTecaj = p_prodajniTecaj;
     }
 
     public BigDecimal getSrednjiTecaj() {
@@ -69,23 +69,23 @@ public class TecajnaLista {
 
         TecajnaLista that = (TecajnaLista) o;
 
-        if (id != that.id) return false;
+        if (id != null ? !id.equals(that.id) : that.id != null) return false;
         if (!drzava.equals(that.drzava)) return false;
         if (!dan.equals(that.dan)) return false;
         if (!kupovniTecaj.equals(that.kupovniTecaj)) return false;
         if (!srednjiTecaj.equals(that.srednjiTecaj)) return false;
-        return proidajniTecaj.equals(that.proidajniTecaj);
+        return prodajniTecaj.equals(that.prodajniTecaj);
 
     }
 
     @Override
     public int hashCode() {
-        int result = (int) (id ^ (id >>> 32));
+        int result = id != null ? id.hashCode() : 0;
         result = 31 * result + drzava.hashCode();
         result = 31 * result + dan.hashCode();
         result = 31 * result + kupovniTecaj.hashCode();
         result = 31 * result + srednjiTecaj.hashCode();
-        result = 31 * result + proidajniTecaj.hashCode();
+        result = 31 * result + prodajniTecaj.hashCode();
         return result;
     }
 
@@ -97,7 +97,7 @@ public class TecajnaLista {
                 ", drzava=" + drzava +
                 ", kupovniTecaj='" + kupovniTecaj + '\'' +
                 ", srednjiTecaj='" + srednjiTecaj + '\'' +
-                ", proidajniTecaj='" + proidajniTecaj + '\'' +
+                ", prodajniTecaj='" + prodajniTecaj + '\'' +
                 '}';
     }
 }

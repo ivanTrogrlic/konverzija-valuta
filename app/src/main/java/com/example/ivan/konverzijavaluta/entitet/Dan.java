@@ -1,28 +1,28 @@
 package com.example.ivan.konverzijavaluta.entitet;
 
-import java.util.Date;
+import org.joda.time.LocalDate;
 
 /**
  * Created by Ivan on 12.4.2016..
  */
 public class Dan {
 
-    private long id;
-    private Date dan;
+    private Long      id;
+    private LocalDate dan;
 
-    public long getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(long p_id) {
+    public void setId(Long p_id) {
         id = p_id;
     }
 
-    public Date getDan() {
+    public LocalDate getDan() {
         return dan;
     }
 
-    public void setDan(Date p_dan) {
+    public void setDan(LocalDate p_dan) {
         dan = p_dan;
     }
 
@@ -33,14 +33,14 @@ public class Dan {
 
         Dan dan1 = (Dan) o;
 
-        if (id != dan1.id) return false;
+        if (id != null ? !id.equals(dan1.id) : dan1.id != null) return false;
         return dan.equals(dan1.dan);
 
     }
 
     @Override
     public int hashCode() {
-        int result = (int) (id ^ (id >>> 32));
+        int result = id != null ? id.hashCode() : 0;
         result = 31 * result + dan.hashCode();
         return result;
     }

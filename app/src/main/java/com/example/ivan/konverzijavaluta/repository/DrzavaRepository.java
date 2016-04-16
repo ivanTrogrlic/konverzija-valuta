@@ -10,9 +10,6 @@ import android.support.annotation.Nullable;
 import com.example.ivan.konverzijavaluta.cursor.DrzavaCursor;
 import com.example.ivan.konverzijavaluta.database.KonverzijaContract;
 import com.example.ivan.konverzijavaluta.entitet.Drzava;
-import com.example.ivan.konverzijavaluta.util.DbUtils;
-
-import java.util.Date;
 
 /**
  * Created by Ivan on 12.4.2016..
@@ -74,11 +71,11 @@ public class DrzavaRepository {
     /**
      * Deletes Drzava where date is equal given date, and returns 0 if Drzava is deleted, or 0 if its not deleted.
      */
-    public long delete(Date p_date) {
+    public long delete(Long p_id) {
         return m_contentResolver.delete
-                (KonverzijaContract.Dan.CONTENT_URI,
-                 KonverzijaContract.Dan.DAN + " = ? ",
-                 new String[]{DbUtils.toDbDate(p_date)});
+                (KonverzijaContract.Drzava.CONTENT_URI,
+                 KonverzijaContract.Drzava._ID + " = ? ",
+                 new String[]{String.valueOf(p_id)});
     }
 
     @NonNull

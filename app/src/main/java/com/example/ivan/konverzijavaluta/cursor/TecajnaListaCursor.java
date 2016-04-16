@@ -46,7 +46,7 @@ public class TecajnaListaCursor extends AbstractCursor {
         tecajnaLista.setId(getLong(KonverzijaContract.TecajnaLista._ID));
         tecajnaLista.setKupovniTecaj(getBigDecimal(KonverzijaContract.TecajnaLista.KUPOVNI_TECAJ));
         tecajnaLista.setSrednjiTecaj(getBigDecimal(KonverzijaContract.TecajnaLista.SREDNJI_TECAJ));
-        tecajnaLista.setProidajniTecaj(getBigDecimal(KonverzijaContract.TecajnaLista.PRODAJNI_TECAJ));
+        tecajnaLista.setProdajniTecaj(getBigDecimal(KonverzijaContract.TecajnaLista.PRODAJNI_TECAJ));
 
         return tecajnaLista;
     }

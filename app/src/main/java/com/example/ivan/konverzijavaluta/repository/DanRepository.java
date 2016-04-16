@@ -11,6 +11,8 @@ import com.example.ivan.konverzijavaluta.database.KonverzijaContract;
 import com.example.ivan.konverzijavaluta.entitet.Dan;
 import com.example.ivan.konverzijavaluta.util.DbUtils;
 
+import org.joda.time.LocalDate;
+
 import java.util.Date;
 
 /**
@@ -48,7 +50,7 @@ public class DanRepository {
     /**
      * Returns Dan for given date, or null if it doesn't exists.
      */
-    public Dan getByDate(Date p_date) {
+    public Dan getByDate(LocalDate p_date) {
         String[] projection = new String[]{KonverzijaContract.Dan.DAN};
         String whereClause = KonverzijaContract.Dan.DAN + "=?";
         String[] whereArgs = {DbUtils.toDbDate(p_date)};
@@ -69,7 +71,7 @@ public class DanRepository {
     /**
      * Deletes Dan where date is equal given date, and returns 0 if Dan is deleted, or 0 if its not deleted.
      */
-    public long delete(Date p_date) {
+    public long delete(LocalDate p_date) {
         return m_contentResolver.delete
                 (KonverzijaContract.Dan.CONTENT_URI,
                  KonverzijaContract.Dan.DAN + " = ? ",

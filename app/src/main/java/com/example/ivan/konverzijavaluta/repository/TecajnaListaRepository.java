@@ -12,8 +12,6 @@ import com.example.ivan.konverzijavaluta.database.KonverzijaContract;
 import com.example.ivan.konverzijavaluta.entitet.TecajnaLista;
 import com.example.ivan.konverzijavaluta.util.DbUtils;
 
-import java.util.Date;
-
 /**
  * Created by Ivan on 12.4.2016..
  */
@@ -64,26 +62,26 @@ public class TecajnaListaRepository {
     public long insert(TecajnaLista p_tecajnaLista) {
         ContentValues values = new ContentValues();
         values.put(KonverzijaContract.TecajnaLista._ID, p_tecajnaLista.getId());
-        values.put(KonverzijaContract.TecajnaLista.DAN_ID, DbUtils.toDbDate(p_tecajnaLista.getDan().getDan()));
+        values.put(KonverzijaContract.TecajnaLista.DAN_ID, p_tecajnaLista.getDan().getId());
         values.put(KonverzijaContract.TecajnaLista.DRZAVA_ID, p_tecajnaLista.getDrzava().getId());
         values.put(KonverzijaContract.TecajnaLista.KUPOVNI_TECAJ,
                    DbUtils.toDbBigDecimal(p_tecajnaLista.getKupovniTecaj()));
         values.put(KonverzijaContract.TecajnaLista.SREDNJI_TECAJ,
                    DbUtils.toDbBigDecimal(p_tecajnaLista.getSrednjiTecaj()));
         values.put(KonverzijaContract.TecajnaLista.PRODAJNI_TECAJ,
-                   DbUtils.toDbBigDecimal(p_tecajnaLista.getProidajniTecaj()));
-        Uri uri = m_contentResolver.insert(KonverzijaContract.Drzava.CONTENT_URI, values);
+                   DbUtils.toDbBigDecimal(p_tecajnaLista.getProdajniTecaj()));
+        Uri uri = m_contentResolver.insert(KonverzijaContract.TecajnaLista.CONTENT_URI, values);
         return KonverzijaContract.getId(uri);
     }
 
     /**
      * Deletes TecajnaLista where date is equal given date, and returns 0 if TecajnaLista is deleted, or 0 if its not deleted.
      */
-    public long delete(Date p_date) {
+    public long delete(Long p_id) {
         return m_contentResolver.delete
-                (KonverzijaContract.Dan.CONTENT_URI,
-                 KonverzijaContract.Dan.DAN + " = ? ",
-                 new String[]{DbUtils.toDbDate(p_date)});
+                (KonverzijaContract.TecajnaLista.CONTENT_URI,
+                 KonverzijaContract.TecajnaLista._ID + " = ? ",
+                 new String[]{String.valueOf(p_id)});
     }
 
     @NonNull

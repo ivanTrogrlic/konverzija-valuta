@@ -4,6 +4,10 @@ package com.example.ivan.konverzijavaluta.util;
  * Created by Ivan on 12.4.2016..
  */
 
+import org.joda.time.LocalDate;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
+
 import java.math.BigDecimal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -11,7 +15,8 @@ import java.util.Date;
 import java.util.TimeZone;
 
 public class DbUtils {
-    private static final SimpleDateFormat SDF_DATE = new SimpleDateFormat("yyyy-MM-dd");
+    private static final SimpleDateFormat  SDF_DATE = new SimpleDateFormat("yyyy-MM-dd");
+    private static final DateTimeFormatter DTF_DATE = DateTimeFormat.forPattern("yyyy-MM-dd");
 
     private static Object s_sdfLock = new Object();
 
@@ -32,6 +37,16 @@ public class DbUtils {
             retVal = SDF_DATE.format(p_date);
         }
 
+        return retVal;
+    }
+
+    public static String toDbDate(LocalDate p_localDate) {
+        if (p_localDate == null) return null;
+
+        String retVal;
+        synchronized (s_sdfLock) {
+            retVal = DTF_DATE.print(p_localDate);
+        }
         return retVal;
     }
 

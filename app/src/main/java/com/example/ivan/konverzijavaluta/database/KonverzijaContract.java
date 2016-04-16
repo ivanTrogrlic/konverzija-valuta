@@ -52,7 +52,7 @@ public class KonverzijaContract {
         String DAN_ID         = "dan_id";
         String KUPOVNI_TECAJ  = "kupovni_tecaj";
         String SREDNJI_TECAJ  = "srednji_tecaj";
-        String PRODAJNI_TECAJ = "prodajkni_tecaj";
+        String PRODAJNI_TECAJ = "prodajni_tecaj";
     }
 
     public interface Dan {
