@@ -3,7 +3,10 @@ package com.example.ivan.konverzijavaluta.main;
 import android.app.Application;
 
 import com.example.ivan.konverzijavaluta.BuildConfig;
+import com.example.ivan.konverzijavaluta.rest.RestClient;
 import com.facebook.stetho.Stetho;
+
+import net.danlew.android.joda.JodaTimeAndroid;
 
 import timber.log.Timber;
 
@@ -20,6 +23,9 @@ public class KonverzijaValutaApplication extends Application {
             Timber.plant(new Timber.DebugTree());
             Stetho.initializeWithDefaults(this);
         }
+
+        JodaTimeAndroid.init(this);
+        RestClient.init(this);
 
     }
 }

@@ -11,14 +11,17 @@ import com.example.ivan.konverzijavaluta.main.DateChooseFragment;
 import com.example.ivan.konverzijavaluta.repository.DanRepository;
 import com.example.ivan.konverzijavaluta.repository.DrzavaRepository;
 import com.example.ivan.konverzijavaluta.repository.TecajnaListaRepository;
-import com.squareup.okhttp.Call;
-import com.squareup.okhttp.OkHttpClient;
-import com.squareup.okhttp.Request;
-import com.squareup.okhttp.Response;
+import com.example.ivan.konverzijavaluta.rest.EcbWebService;
+import com.example.ivan.konverzijavaluta.rest.RestClient;
 
+import org.encog.util.csv.CSVFormat;
+import org.encog.util.csv.ReadCSV;
 import org.joda.time.LocalDate;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -28,10 +31,17 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.concurrent.TimeUnit;
+import java.util.Map;
 
+import okhttp3.Call;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+import okhttp3.ResponseBody;
+import retrofit2.Callback;
 import timber.log.Timber;
 
 public class DownloadIntentService extends IntentService {
@@ -63,18 +73,83 @@ public class DownloadIntentService extends IntentService {
 
         String response = "Done downloading";
 
-        try {
-            downloadUrl();
-        } catch (IOException e) {
-            Timber.e(e, e.getMessage());
-            response = "Unable to retrieve web page. URL may be invalid.";
-        }
+//        try {
+        download();
+//        } catch (IOException e) {
+//            Timber.e(e, e.getMessage());
+//            response = "Unable to retrieve web page. URL may be invalid.";
+//        }
 
         Intent broadcastIntent = new Intent();
         broadcastIntent.setAction(DateChooseFragment.ResponseReceiver.ACTION_RESP);
         broadcastIntent.addCategory(Intent.CATEGORY_DEFAULT);
         broadcastIntent.putExtra(PARAM_OUT_MSG, response);
         sendBroadcast(broadcastIntent);
+    }
+
+    private void download() {
+        Map<String, String> map = new HashMap<>();
+        map.put("startPeriod", "2016-05-23"); //TODO from last downloaded
+        map.put("endPeriod", LocalDate.now().toString("yyyy-mm-dd"));
+        RestClient.create(EcbWebService.class).get("D..EUR.SP00.A", map)
+                .enqueue(new Callback<ResponseBody>() {
+                    @Override
+                    public void onResponse(retrofit2.Call<ResponseBody> call,
+                                           retrofit2.Response<ResponseBody> response) {
+                        if (!response.isSuccessful()) {
+                            Timber.e(new Exception(), response.message());
+                            return;
+                        }
+
+                        BufferedReader reader;
+                        BufferedWriter writer;
+                        try {
+                            String path1 = getExternalFilesDir(null).getPath();
+                            String path2 = "dataSet.csv";
+                            String path = path1 + "/" + path2;
+                            File file = new File(path);
+
+                            if (!file.exists()) {
+                                file.getParentFile().mkdirs();
+                            }
+
+                            writer = new BufferedWriter(new FileWriter(path));
+                            reader = new BufferedReader(new InputStreamReader(response.body().byteStream()));
+                            StringBuilder sb = new StringBuilder();
+                            String line;
+
+                            while ((line = reader.readLine()) != null) {
+                                Timber.d(line);
+                                sb.append(line + "\n");
+                            }
+
+                            String result = sb.toString();
+
+                            writer.write(result);
+                            writer.close();
+                            reader.close();
+
+                            ReadCSV csv = new ReadCSV(file, true, new CSVFormat());
+                            while (csv.next()) {
+                                String timePeriod = csv.get("TIME_PERIOD");
+                                String unit = csv.get("UNIT");
+                                String value = csv.get("OBS_VALUE");
+                                Timber.d("Time period: " + timePeriod);
+                                Timber.d("Unit: " + unit);
+                                Timber.d("Value: " + value);
+                            }
+                            file.delete();
+                        } catch (IOException e) {
+                            Timber.e(e, e.getMessage());
+                        }
+
+                    }
+
+                    @Override
+                    public void onFailure(retrofit2.Call<ResponseBody> call, Throwable t) {
+                        Timber.e(t, t.getMessage());
+                    }
+                });
     }
 
     protected void downloadUrl() throws IOException {
@@ -142,9 +217,7 @@ public class DownloadIntentService extends IntentService {
         URL url = new URL(
                 getUrl(String.valueOf(p_dayFor), String.valueOf(p_monthFor - 1), String.valueOf(p_yearFor)));
 
-        OkHttpClient client = new OkHttpClient();
-        client.setConnectTimeout(100, TimeUnit.SECONDS);
-        client.setReadTimeout(100, TimeUnit.SECONDS);
+        OkHttpClient client = RestClient.provideHttpClient(getApplicationContext());
         Request request = new Request.Builder().url(url).build();
         Call call = client.newCall(request);
         return call.execute();

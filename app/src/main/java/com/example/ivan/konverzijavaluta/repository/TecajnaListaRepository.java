@@ -24,7 +24,7 @@ public class TecajnaListaRepository {
     }
 
     /**
-     * Returns Drzava for given id, or null if it doesn't exists.
+     * Returns Tecajna lista for given id, or null if it doesn't exists.
      */
     public TecajnaLista getById(long p_id) {
         String[] projection = getProjection();
@@ -86,8 +86,9 @@ public class TecajnaListaRepository {
 
     @NonNull
     private String[] getProjection() {
-        return new String[]{KonverzijaContract.Drzava._ID, KonverzijaContract.Drzava.SIFRA,
-                KonverzijaContract.Drzava.JEDINICA, KonverzijaContract.Drzava.VALUTA};
+        return new String[]{KonverzijaContract.TecajnaLista._ID, KonverzijaContract.TecajnaLista.DAN_ID,
+                KonverzijaContract.TecajnaLista.DRZAVA_ID, KonverzijaContract.TecajnaLista.KUPOVNI_TECAJ,
+                KonverzijaContract.TecajnaLista.SREDNJI_TECAJ, KonverzijaContract.TecajnaLista.PRODAJNI_TECAJ};
     }
 
     @Nullable

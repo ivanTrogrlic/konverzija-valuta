@@ -48,19 +48,33 @@ android {
     }
 }
 
+repositories {
+    maven { url 'http://org.encog' }
+}
+
 dependencies {
-    compile fileTree(dir: 'libs', include: ['*.jar'])
+    compile fileTree(include: ['*.jar'], dir: 'libs')
     compile 'com.android.support:appcompat-v7:23.1.1'
     compile 'com.jakewharton:butterknife:6.1.0'
-    compile 'com.squareup.okhttp:okhttp:2.4.0'
     compile 'com.jakewharton.timber:timber:3.1.0'
-
+    compile 'com.google.code.gson:gson:2.6.2'
     // A debug bridge for Android applications
     compile 'com.facebook.stetho:stetho:1.2.0'
     compile('com.facebook.stetho:stetho-okhttp3:1.3.1') {
         exclude module: 'okhttp'
     }
-
     // Date time lib
     compile 'net.danlew:android.joda:2.8.2'
+    compile 'org.encog:encog-core:3.3.0'
+    compile 'com.squareup.okhttp3:okhttp:3.2.0'
+    // REST client
+    compile('com.squareup.retrofit2:retrofit:2.0.2') {
+        exclude module: 'okhttp'
+    }
+    compile('com.squareup.retrofit2:converter-jackson:2.0.0') {
+        exclude module: 'okhttp'
+    }
+    compile('com.squareup.okhttp3:logging-interceptor:3.2.0') {
+        exclude module: 'okhttp'
+    }
 }

@@ -8,11 +8,12 @@ import android.view.View;
 import android.widget.ProgressBar;
 
 import com.example.ivan.konverzijavaluta.R;
+import com.example.ivan.konverzijavaluta.service.ConvertCsvToSqlService;
 
 public class MainStartingActivity extends AppCompatActivity {
 
-    public static Context context;
-    static ProgressBar progressBar;
+    public static Context     context;
+    static        ProgressBar progressBar;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -32,6 +33,9 @@ public class MainStartingActivity extends AppCompatActivity {
             getFragmentManager().beginTransaction().add(R.id.fragment_container, firstFragment).commit();
         }
 
+        ConvertCsvToSqlService.start(this);
+//        TecajnaListaRepository tecajnaListaRepository = new TecajnaListaRepository(getContentResolver());
+//        TecajnaLista byId = tecajnaListaRepository.getById(1l);
     }
 
     @Override

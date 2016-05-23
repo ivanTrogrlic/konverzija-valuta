@@ -101,7 +101,7 @@ public class DateChooseFragment extends Fragment {
         if (isMyServiceRunning()) {
             MainStartingActivity.progressBar.setVisibility(View.VISIBLE);
         } else {
-            startDownloadService();
+//            startDownloadService();
         }
     }
 

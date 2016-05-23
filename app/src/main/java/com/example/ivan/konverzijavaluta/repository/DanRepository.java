@@ -13,8 +13,6 @@ import com.example.ivan.konverzijavaluta.util.DbUtils;
 
 import org.joda.time.LocalDate;
 
-import java.util.Date;
-
 /**
  * Created by Ivan on 12.4.2016..
  */
