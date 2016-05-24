@@ -48,10 +48,21 @@ public class TecajnaListaRepository {
     /**
      * Returns TecajnaLista for given Dan ID, or null if it doesn't exists.
      */
-    public TecajnaLista getByDan(String p_danId) {
+    public TecajnaLista getByDan(long p_danId) {
         String[] projection = getProjection();
         String whereClause = KonverzijaContract.TecajnaLista.DAN_ID + "=?";
-        String[] whereArgs = {p_danId};
+        String[] whereArgs = {String.valueOf(p_danId)};
+
+        return query(projection, whereClause, whereArgs);
+    }
+
+    /**
+     * Returns TecajnaLista for given Dan ID and Drzava ID, or null if it doesn't exists.
+     */
+    public TecajnaLista getByDanAndDrzava(long p_danId, long p_drzavaId) {
+        String[] projection = getProjection();
+        String whereClause = KonverzijaContract.TecajnaLista.DAN_ID + "=? AND " + KonverzijaContract.TecajnaLista.DRZAVA_ID + "=?";
+        String[] whereArgs = {String.valueOf(p_danId), String.valueOf(p_drzavaId)};
 
         return query(projection, whereClause, whereArgs);
     }

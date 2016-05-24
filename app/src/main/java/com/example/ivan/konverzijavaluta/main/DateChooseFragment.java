@@ -98,7 +98,7 @@ public class DateChooseFragment extends Fragment {
     public void onResume() {
         super.onResume();
         getActivity().registerReceiver(receiver, filter);
-        if (isMyServiceRunning()) {
+        if (isMyServiceRunning(getActivity())) {
             MainStartingActivity.progressBar.setVisibility(View.VISIBLE);
         } else {
 //            startDownloadService();
@@ -598,9 +598,8 @@ public class DateChooseFragment extends Fragment {
 
     }
 
-    public static boolean isMyServiceRunning() {
-        ActivityManager manager = (ActivityManager) MainStartingActivity.context.getSystemService(
-                Context.ACTIVITY_SERVICE);
+    public static boolean isMyServiceRunning(Context p_context) {
+        ActivityManager manager = (ActivityManager) p_context.getSystemService(Context.ACTIVITY_SERVICE);
         for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
             if ("com.example.ivan.konverzijavaluta.service.DownloadIntentService".equals(
                     service.service.getClassName())) {
@@ -732,7 +731,7 @@ public class DateChooseFragment extends Fragment {
 
             case R.id.action_refresh:
 
-                if (!isMyServiceRunning()) {
+                if (!isMyServiceRunning(getActivity())) {
                     ConnectivityManager connMgr = (ConnectivityManager) getActivity().getSystemService(
                             Context.CONNECTIVITY_SERVICE);
                     NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();

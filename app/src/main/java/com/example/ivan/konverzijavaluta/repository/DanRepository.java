@@ -28,7 +28,7 @@ public class DanRepository {
      * Returns last Dan from the table, or null if table is empty.
      */
     public Dan getLast() {
-        String[] projection = new String[]{KonverzijaContract.Dan.DAN};
+        String[] projection = new String[]{KonverzijaContract.Dan._ID, KonverzijaContract.Dan.DAN};
         String sortOrder = " " + KonverzijaContract.Dan.DAN + " DESC";
 
         return query(projection, null, null, sortOrder);
@@ -38,7 +38,7 @@ public class DanRepository {
      * Returns Dan for given date, or null if it doesn't exists.
      */
     public Dan getById(long p_id) {
-        String[] projection = new String[]{KonverzijaContract.Dan.DAN};
+        String[] projection = new String[]{KonverzijaContract.Dan._ID, KonverzijaContract.Dan.DAN};
         String whereClause = KonverzijaContract.Dan._ID + "=?";
         String[] whereArgs = {String.valueOf(p_id)};
 
@@ -49,7 +49,7 @@ public class DanRepository {
      * Returns Dan for given date, or null if it doesn't exists.
      */
     public Dan getByDate(LocalDate p_date) {
-        String[] projection = new String[]{KonverzijaContract.Dan.DAN};
+        String[] projection = new String[]{KonverzijaContract.Dan._ID, KonverzijaContract.Dan.DAN};
         String whereClause = KonverzijaContract.Dan.DAN + "=?";
         String[] whereArgs = {DbUtils.toDbDate(p_date)};
 
@@ -61,6 +61,7 @@ public class DanRepository {
      */
     public long insert(Dan p_dan) {
         ContentValues values = new ContentValues();
+        values.put(KonverzijaContract.Dan._ID, p_dan.getId());
         values.put(KonverzijaContract.Dan.DAN, DbUtils.toDbDate(p_dan.getDan()));
         Uri uri = m_contentResolver.insert(KonverzijaContract.Dan.CONTENT_URI, values);
         return KonverzijaContract.getId(uri);

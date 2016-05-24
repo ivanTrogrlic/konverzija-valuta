@@ -25,9 +25,9 @@ public class TecajnaListaCursor extends AbstractCursor {
 
         for (String columnName : m_cursor.getColumnNames()) {
             if (columnName.startsWith(Tables.DAN + "$")) {
-                // Create LeafCursor
+                // Create DanCursor
                 DanCursor danCursor = new DanCursor(m_contentResolver, m_cursor, Tables.DAN);
-                // Set Leaf
+                // Set Dan
                 tecajnaLista.setDan(danCursor.toDan());
                 break;
             }
@@ -35,9 +35,9 @@ public class TecajnaListaCursor extends AbstractCursor {
 
         for (String columnName : m_cursor.getColumnNames()) {
             if (columnName.startsWith(Tables.DRZAVA + "$")) {
-                // Create LeafCursor
-                DrzavaCursor drzavaCursor = new DrzavaCursor(m_contentResolver, m_cursor, Tables.DAN);
-                // Set Leaf
+                // Create DrzavaCursor
+                DrzavaCursor drzavaCursor = new DrzavaCursor(m_contentResolver, m_cursor, Tables.DRZAVA);
+                // Set Drzava
                 tecajnaLista.setDrzava(drzavaCursor.toDrzava());
                 break;
             }
