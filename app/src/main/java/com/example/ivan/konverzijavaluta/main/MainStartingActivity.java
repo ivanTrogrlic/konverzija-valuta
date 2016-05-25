@@ -7,18 +7,15 @@ import android.view.View;
 import android.widget.ProgressBar;
 
 import com.example.ivan.konverzijavaluta.R;
+import com.example.ivan.konverzijavaluta.encog.EncogService;
 import com.example.ivan.konverzijavaluta.service.ConvertCsvToSqlService;
 import com.example.ivan.konverzijavaluta.service.DownloadIntentService;
 import com.example.ivan.konverzijavaluta.util.Preferences;
 
 import org.joda.time.LocalDate;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-
-import timber.log.Timber;
+import butterknife.ButterKnife;
+import butterknife.OnClick;
 
 public class MainStartingActivity extends AppCompatActivity {
 
@@ -34,13 +31,10 @@ public class MainStartingActivity extends AppCompatActivity {
         setSupportActionBar(mToolbar);
         progressBar.setVisibility(View.INVISIBLE);
 
-        if (savedInstanceState == null) {
-            DateChooseFragment firstFragment = new DateChooseFragment();
-            firstFragment.setArguments(getIntent().getExtras());
-            getFragmentManager().beginTransaction().add(R.id.fragment_container, firstFragment).commit();
+        ButterKnife.inject(this);
 
+        if (savedInstanceState == null) {
             if (!Preferences.getLastDownloadDate(getApplicationContext()).equals(LocalDate.now())) {
-                // We already have the latest exchange list
                 DownloadIntentService.start(this);
             }
 
@@ -50,27 +44,10 @@ public class MainStartingActivity extends AppCompatActivity {
         }
     }
 
-    //TODO delete this
-    public void exportFile() {
-        String path = getExternalFilesDir(null).getPath() + "/" + DownloadIntentService.TECAJNA_LISTA_FILE;
-        File file = new File(path);
-
-
-        StringBuilder text = new StringBuilder();
-
-        try {
-            BufferedReader br = new BufferedReader(new FileReader(file));
-            String line;
-
-            while ((line = br.readLine()) != null) {
-                Timber.d(line);
-                text.append(line);
-                text.append('\n');
-            }
-            br.close();
-        } catch (IOException e) {
-            Timber.e(e, e.getMessage());
-        }
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        ButterKnife.reset(this);
     }
 
     @Override
@@ -80,6 +57,11 @@ public class MainStartingActivity extends AppCompatActivity {
         } else {
             super.onBackPressed();
         }
+    }
+
+    @OnClick(R.id.calculator)
+    public void openCalculator() {
+        EncogService.start(this); //TODO move this elsewhere
     }
 
 }

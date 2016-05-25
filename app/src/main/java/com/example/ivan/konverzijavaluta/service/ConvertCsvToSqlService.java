@@ -34,10 +34,11 @@ import timber.log.Timber;
  */
 public class ConvertCsvToSqlService extends IntentService {
 
-    public static final String TECAJNA_LISTA_TEMP = "tecajnalistatemp.csv";
-    public static final String DATE_FORMAT        = "M/d/yyyy";
-    public static final String DATE               = "Date";
-    public static final String MISSING_VALUE      = "?";
+    public static final String EXCHANGE_LIST_TEMP     = "exchangelisttemp.csv";
+    public static final String EXCHANGE_LIST_REVERSED = "exchangelistreversed.csv";
+    public static final String DATE_FORMAT            = "M/d/yyyy";
+    public static final String DATE                   = "Date";
+    public static final String MISSING_VALUE          = "?";
 
     DanRepository          m_danRepository;
     DrzavaRepository       m_drzavaRepository;
@@ -65,7 +66,7 @@ public class ConvertCsvToSqlService extends IntentService {
         BufferedReader reader;
         BufferedWriter writer;
         try {
-            String path = getExternalFilesDir(null).getPath() + "/" + TECAJNA_LISTA_TEMP;
+            String path = getExternalFilesDir(null).getPath() + "/" + EXCHANGE_LIST_TEMP;
             File file = new File(path);
 
             if (!file.exists()) {
@@ -73,8 +74,7 @@ public class ConvertCsvToSqlService extends IntentService {
             }
 
             writer = new BufferedWriter(new FileWriter(path));
-            reader = new BufferedReader(
-                    new InputStreamReader(getAssets().open(DownloadIntentService.TECAJNA_LISTA_FILE)));
+            reader = new BufferedReader(new InputStreamReader(getAssets().open(EXCHANGE_LIST_REVERSED)));
             StringBuilder sb = new StringBuilder();
             String line;
 
@@ -110,6 +110,7 @@ public class ConvertCsvToSqlService extends IntentService {
 
             for (Valute valuta : Valute.values()) {
                 String val = p_csv.get(valuta.name());
+
                 Drzava drzava = m_drzavaRepository.getByValuta(valuta.name());
                 if (drzava == null) {
                     drzava = new Drzava();

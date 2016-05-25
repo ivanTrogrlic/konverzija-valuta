@@ -26,6 +26,7 @@
     <string name="godina">God:</string>
     <string name="action_refresh">Refresh</string>
     <string name="unesi_datum">Odaberite datum za koji želite raditi konverziju:</string>
+    <string name="exchange_calc">Exchange calculator</string>
 
 
     <string-array name="valute">
@@ -128,5 +129,6 @@
         <item>2014</item>
         <item>2015</item>
     </string-array>
+    <string name="title_activity_calculator">CalculatorActivity</string>
 
 </resources>

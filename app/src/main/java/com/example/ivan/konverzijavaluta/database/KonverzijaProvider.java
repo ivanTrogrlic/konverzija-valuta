@@ -13,6 +13,7 @@ import android.text.TextUtils;
 import com.example.ivan.konverzijavaluta.database.KonverzijaContract.Dan;
 import com.example.ivan.konverzijavaluta.database.KonverzijaContract.Drzava;
 import com.example.ivan.konverzijavaluta.database.KonverzijaContract.TecajnaLista;
+import com.example.ivan.konverzijavaluta.database.KonverzijaContract.TecajnaListaPredicted;
 import com.example.ivan.konverzijavaluta.database.KonverzijaDatabase.Tables;
 
 
@@ -21,12 +22,14 @@ public class KonverzijaProvider extends ContentProvider {
 
     static final UriMatcher URI_MATCHER = buildUriMatcher();
 
-    static final int DRZAVA           = 100;
-    static final int DRZAVA_ID        = 101;
-    static final int TECAJNA_LISTA    = 200;
-    static final int TECAJNA_LISTA_ID = 201;
-    static final int DAN              = 300;
-    static final int DAN_ID           = 301;
+    static final int DRZAVA                     = 100;
+    static final int DRZAVA_ID                  = 101;
+    static final int TECAJNA_LISTA              = 200;
+    static final int TECAJNA_LISTA_ID           = 201;
+    static final int DAN                        = 300;
+    static final int DAN_ID                     = 301;
+    static final int TECAJNA_LISTA_PREDICTED    = 400;
+    static final int TECAJNA_LISTA_PREDICTED_ID = 401;
 
     private static UriMatcher buildUriMatcher() {
         UriMatcher retVal = new UriMatcher(UriMatcher.NO_MATCH);
@@ -39,6 +42,9 @@ public class KonverzijaProvider extends ContentProvider {
 
         retVal.addURI(KonverzijaContract.AUTHORITY, "dan", DAN);
         retVal.addURI(KonverzijaContract.AUTHORITY, "dan/#", DAN_ID);
+
+        retVal.addURI(KonverzijaContract.AUTHORITY, "tecajna_lista_predicted", TECAJNA_LISTA_PREDICTED);
+        retVal.addURI(KonverzijaContract.AUTHORITY, "tecajna_lista_predicted/#", TECAJNA_LISTA_PREDICTED_ID);
 
         return retVal;
     }
@@ -68,6 +74,13 @@ public class KonverzijaProvider extends ContentProvider {
                 break;
             case TECAJNA_LISTA:
                 queryBuilder.setTables(Tables.TECAJNA_LISTA);
+                break;
+            case TECAJNA_LISTA_PREDICTED_ID:
+                queryBuilder.setTables(Tables.TECAJNA_LISTA_PREDCITED);
+                queryBuilder.appendWhere(TecajnaListaPredicted._ID + "=" + uri.getLastPathSegment());
+                break;
+            case TECAJNA_LISTA_PREDICTED:
+                queryBuilder.setTables(Tables.TECAJNA_LISTA_PREDCITED);
                 break;
             case DAN_ID:
                 queryBuilder.setTables(Tables.DAN);
@@ -102,6 +115,10 @@ public class KonverzijaProvider extends ContentProvider {
                 _id = db.insertOrThrow(Tables.TECAJNA_LISTA, "", contentValues);
                 getContext().getContentResolver().notifyChange(uri, null, false);
                 return KonverzijaContract.buildUri(TecajnaLista.CONTENT_URI, _id);
+            case TECAJNA_LISTA_PREDICTED:
+                _id = db.insertOrThrow(Tables.TECAJNA_LISTA_PREDCITED, "", contentValues);
+                getContext().getContentResolver().notifyChange(uri, null, false);
+                return KonverzijaContract.buildUri(TecajnaListaPredicted.CONTENT_URI, _id);
             case DAN:
                 _id = db.insertOrThrow(Tables.DAN, "", contentValues);
                 getContext().getContentResolver().notifyChange(uri, null, false);
@@ -133,6 +150,14 @@ public class KonverzijaProvider extends ContentProvider {
             case TECAJNA_LISTA_ID:
                 id = uri.getPathSegments().get(1);
                 count = db.delete(Tables.TECAJNA_LISTA, TecajnaLista._ID + " = " + id +
+                        (!TextUtils.isEmpty(selection) ? " AND (" + selection + ')' : ""), selectionArgs);
+                break;
+            case TECAJNA_LISTA_PREDICTED:
+                count = db.delete(Tables.TECAJNA_LISTA_PREDCITED, selection, selectionArgs);
+                break;
+            case TECAJNA_LISTA_PREDICTED_ID:
+                id = uri.getPathSegments().get(1);
+                count = db.delete(Tables.TECAJNA_LISTA_PREDCITED, TecajnaListaPredicted._ID + " = " + id +
                         (!TextUtils.isEmpty(selection) ? " AND (" + selection + ')' : ""), selectionArgs);
                 break;
             case DAN:
@@ -170,6 +195,15 @@ public class KonverzijaProvider extends ContentProvider {
             case TECAJNA_LISTA_ID:
                 count = db.update(Tables.TECAJNA_LISTA, contentValues,
                                   TecajnaLista._ID + " = " + uri.getPathSegments().get(1) +
+                                          (!TextUtils.isEmpty(selection) ? " AND (" + selection + ')' : ""),
+                                  selectionArgs);
+                break;
+            case TECAJNA_LISTA_PREDICTED:
+                count = db.update(Tables.TECAJNA_LISTA_PREDCITED, contentValues, selection, selectionArgs);
+                break;
+            case TECAJNA_LISTA_PREDICTED_ID:
+                count = db.update(Tables.TECAJNA_LISTA_PREDCITED, contentValues,
+                                  TecajnaListaPredicted._ID + " = " + uri.getPathSegments().get(1) +
                                           (!TextUtils.isEmpty(selection) ? " AND (" + selection + ')' : ""),
                                   selectionArgs);
                 break;
