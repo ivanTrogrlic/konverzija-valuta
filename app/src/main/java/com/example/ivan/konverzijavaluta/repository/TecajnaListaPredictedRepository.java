@@ -9,6 +9,9 @@ import android.support.annotation.Nullable;
 
 import com.example.ivan.konverzijavaluta.cursor.TecajnaListaPredictedCursor;
 import com.example.ivan.konverzijavaluta.database.KonverzijaContract;
+import com.example.ivan.konverzijavaluta.database.KonverzijaContract.Dan;
+import com.example.ivan.konverzijavaluta.database.KonverzijaContract.Drzava;
+import com.example.ivan.konverzijavaluta.database.KonverzijaDatabase.Tables;
 import com.example.ivan.konverzijavaluta.entitet.TecajnaListaPredicted;
 import com.example.ivan.konverzijavaluta.util.DbUtils;
 
@@ -34,7 +37,8 @@ public class TecajnaListaPredictedRepository {
         String whereClause = KonverzijaContract.TecajnaListaPredicted._ID + "=?";
         String[] whereArgs = {String.valueOf(p_id)};
 
-        return query(projection, whereClause, whereArgs).get(0);
+        List<TecajnaListaPredicted> list = query(projection, whereClause, whereArgs);
+        return list == null || list.isEmpty() ? null : list.get(0);
     }
 
     /**
@@ -67,7 +71,8 @@ public class TecajnaListaPredictedRepository {
         String whereClause = KonverzijaContract.TecajnaListaPredicted.DAN_ID + "=? AND " + KonverzijaContract.TecajnaListaPredicted.DRZAVA_ID + "=?";
         String[] whereArgs = {String.valueOf(p_danId), String.valueOf(p_drzavaId)};
 
-        return query(projection, whereClause, whereArgs).get(0);
+        List<TecajnaListaPredicted> list = query(projection, whereClause, whereArgs);
+        return list == null || list.isEmpty() ? null : list.get(0);
     }
 
     /**
@@ -102,13 +107,18 @@ public class TecajnaListaPredictedRepository {
     private String[] getProjection() {
         return new String[]{KonverzijaContract.TecajnaListaPredicted._ID, KonverzijaContract.TecajnaListaPredicted.DAN_ID,
                 KonverzijaContract.TecajnaListaPredicted.DRZAVA_ID, KonverzijaContract.TecajnaListaPredicted.KUPOVNI_TECAJ,
-                KonverzijaContract.TecajnaListaPredicted.SREDNJI_TECAJ, KonverzijaContract.TecajnaListaPredicted.PRODAJNI_TECAJ};
+                KonverzijaContract.TecajnaListaPredicted.SREDNJI_TECAJ, KonverzijaContract.TecajnaListaPredicted.PRODAJNI_TECAJ,
+                Tables.DAN + "$" + Dan._ID, Tables.DAN + "$" + Dan.DAN,
+                Tables.DRZAVA + "$" + Drzava._ID, Tables.DRZAVA + "$" + Drzava.JEDINICA, Tables.DRZAVA + "$" + Drzava.SIFRA, Tables.DRZAVA + "$" + Drzava.VALUTA};
     }
 
     @Nullable
     private List<TecajnaListaPredicted> query(String[] p_projection, String p_whereClause, String[] p_whereArgs) {
-        Cursor cursor = m_contentResolver.query(KonverzijaContract.TecajnaListaPredicted.CONTENT_URI, p_projection,
-                                                p_whereClause, p_whereArgs, null);
+        Uri uri = KonverzijaContract.TecajnaListaPredicted.CONTENT_URI
+                .buildUpon()
+                .appendPath(KonverzijaContract.PATH_WITH_DAN_AND_DRZAVA)
+                .build();
+        Cursor cursor = m_contentResolver.query(uri, p_projection, p_whereClause, p_whereArgs, null);
         if (cursor == null) {
             return null;
         }

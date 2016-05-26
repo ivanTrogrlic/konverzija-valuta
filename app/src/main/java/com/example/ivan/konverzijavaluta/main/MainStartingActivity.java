@@ -12,6 +12,7 @@ import com.example.ivan.konverzijavaluta.encog.EncogService;
 import com.example.ivan.konverzijavaluta.service.ConvertCsvToSqlService;
 import com.example.ivan.konverzijavaluta.service.DownloadIntentService;
 import com.example.ivan.konverzijavaluta.ui.PastDataActivity;
+import com.example.ivan.konverzijavaluta.ui.PredictedDataActivity;
 import com.example.ivan.konverzijavaluta.util.Preferences;
 
 import org.joda.time.LocalDate;
@@ -52,19 +53,11 @@ public class MainStartingActivity extends AppCompatActivity {
         ButterKnife.reset(this);
     }
 
-    @Override
-    public void onBackPressed() {
-        if (getFragmentManager().getBackStackEntryCount() > 0) {
-            getFragmentManager().popBackStack();
-        } else {
-            super.onBackPressed();
-        }
-    }
-
     @OnClick(R.id.calculator)
     public void openCalculator() {
         LocalDate lastPredictedDate = Preferences.loadDate(this, Preferences.LAST_PREDICTED_DATE, LocalDate.now());
-        if (LocalDate.now().isAfter(lastPredictedDate)) {
+        if (LocalDate.now().isAfter(lastPredictedDate.minusDays(1))) {
+            // If today is >= last day of the month, make new calculations for the next month
             EncogService.start(this); //TODO move this elsewhere
         }
     }
@@ -75,4 +68,9 @@ public class MainStartingActivity extends AppCompatActivity {
         startActivity(intent);
     }
 
+    @OnClick(R.id.predicted_data)
+    public void openPredictedData() {
+        Intent intent = new Intent(this, PredictedDataActivity.class);
+        startActivity(intent);
+    }
 }

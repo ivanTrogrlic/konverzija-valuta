@@ -39,7 +39,7 @@ public class TecajnaListaRepository {
         String[] whereArgs = {String.valueOf(p_id)};
 
         List<TecajnaLista> list = query(projection, whereClause, whereArgs);
-        return list == null ? null : list.get(0);
+        return list == null || list.isEmpty() ? null : list.get(0);
     }
 
     /**
@@ -76,7 +76,7 @@ public class TecajnaListaRepository {
         String[] whereArgs = {String.valueOf(p_danId), String.valueOf(p_drzavaId)};
 
         List<TecajnaLista> list = query(projection, whereClause, whereArgs);
-        return list == null ? null : list.get(0);
+        return list == null || list.isEmpty() ? null : list.get(0);
     }
 
     /**

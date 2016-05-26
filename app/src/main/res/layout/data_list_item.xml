@@ -6,7 +6,7 @@
     android:padding="3dp">
 
     <TextView
-        android:id="@+id/dan"
+        android:id="@+id/first_row"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_margin="3dp"
@@ -16,7 +16,7 @@
         android:textSize="15dp" />
 
     <TextView
-        android:id="@+id/drzava"
+        android:id="@+id/second_row"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_margin="3dp"
@@ -26,7 +26,7 @@
         android:textSize="15dp" />
 
     <TextView
-        android:id="@+id/valuta"
+        android:id="@+id/third_row"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_margin="3dp"

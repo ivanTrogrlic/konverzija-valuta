@@ -28,7 +28,9 @@
     <string name="unesi_datum">Odaberite datum za koji želite raditi konverziju:</string>
     <string name="exchange_calc">Exchange calculator</string>
     <string name="past_data">Past data</string>
+    <string name="predicted_data">Predicted data</string>
     <string name="select_date">Select date</string>
+    <string name="no_real_data">No real data yet</string>
 
     <string-array name="valute">
         <item>HRK</item>

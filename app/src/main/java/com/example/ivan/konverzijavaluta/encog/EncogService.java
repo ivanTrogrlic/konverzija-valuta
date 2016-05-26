@@ -84,7 +84,7 @@ public class EncogService extends IntentService {
 
             Pair<MLRegression, NormalizationHelper> pair = trainData();
 
-            File actual = getActualExchangeListWith31AddedPredictedLines();
+            File actual = getActualExchangeListPredictedLines();
             if (actual == null) return; //Shouldn't ever happen
 
             predictData(pair.first, pair.second, actual);
@@ -94,7 +94,7 @@ public class EncogService extends IntentService {
             Encog.getInstance().shutdown();
 
         } catch (Exception ex) {
-            Timber.e(ex, "Encog failed");
+            Timber.e(ex, "Encog failed. " + ex.getMessage());
         }
 
     }
@@ -104,9 +104,7 @@ public class EncogService extends IntentService {
         String path = getExternalFilesDir(null).getPath() + "/" + EXCHANGE_LIST_TRAINING;
         File filename = new File(path);
 
-        // Define the format of the data file.
-        // This area will change, depending on the columns and
-        // format of the file that you are trying to model.
+        // Define the format of the data file (CSV format)
         CSVFormat format = new CSVFormat();
         VersatileDataSource source = new CSVDataSource(filename, true, format);
 
@@ -145,9 +143,8 @@ public class EncogService extends IntentService {
         // Send any output to the console.
         model.setReport(new ConsoleStatusReportable());
 
-        // Now normalize the data. Encog will automatically determine the
-        // correct normalization
-        // type based on the model you chose in the last step.
+        // Now normalize the data. Encog will automatically determine the correct normalization
+        // type based on the model you set in the last step.
         data.normalize();
 
         // Set time series.
@@ -155,8 +152,7 @@ public class EncogService extends IntentService {
         data.setLagWindowSize(WINDOW_SIZE);
 
         // Hold back some data for a final validation.
-        // Do not shuffle the data into a random ordering. (never shuffle
-        // time series)
+        // Do not shuffle the data into a random ordering. (never shuffle time series)
         // Use a seed of 1001 so that we always use the same holdback and
         // will get more consistent results.
         model.holdBackValidation(0.3, false, 1001);
@@ -164,9 +160,9 @@ public class EncogService extends IntentService {
         // Choose whatever is the default training type for this model.
         model.selectTrainingType(data);
 
-        // Use a 5-fold cross-validated train. Return the best method found.
-        // (never shuffle time series)
-        MLRegression bestMethod = (MLRegression) model.crossvalidate(2, false); // TODO put 5 here instead of 1
+        // Should user a 5-fold cross-validated train, but it's too slow, instead using 2-fold.
+        // Return the best method found. (never shuffle time series)
+        MLRegression bestMethod = (MLRegression) model.crossvalidate(5, false);
 
         // Display the training and validation errors.
         Timber.d("Training error: " + model.calculateError(bestMethod, model.getTrainingDataset()));
@@ -192,6 +188,7 @@ public class EncogService extends IntentService {
         VectorWindow window = new VectorWindow(WINDOW_SIZE + 1);
         MLData input = p_helper.allocateInputVector(WINDOW_SIZE + 1);
 
+        int month = -1;
         while (csv.next()) {
             addColumnsToArray(csv, line);
             p_helper.normalizeInputVector(line, slice, false);
@@ -203,9 +200,16 @@ public class EncogService extends IntentService {
 
                 LocalDate parsedDate = LocalDate.parse(date,
                                                        DateTimeFormat.forPattern(ConvertCsvToSqlService.DATE_FORMAT));
+                // Save predicted data only from now to the end of the month
                 if (parsedDate.isAfter(LocalDate.now())) {
+                    if (month != -1 && month != parsedDate.getMonthOfYear()) {
+                        Preferences.saveDate(getApplicationContext(), Preferences.LAST_PREDICTED_DATE,
+                                             parsedDate.minusDays(1));
+                        break; // Need just data for current month
+                    }
                     Timber.d(parsedDate.toString());
                     insertTecajnaListaPredicted(p_bestMethod, p_helper, input, parsedDate);
+                    month = parsedDate.getMonthOfYear();
                 }
 
             }
@@ -243,10 +247,6 @@ public class EncogService extends IntentService {
             tecajnaListaPredicted.setSrednjiTecaj(tecaj);
             tecajnaListaPredicted.setProdajniTecaj(tecaj);
             tecajnaListaPredictedRepository.insert(tecajnaListaPredicted);
-
-            if (i == Valute.values().length - 1) {
-                Preferences.saveDate(getApplicationContext(), Preferences.LAST_PREDICTED_DATE, dan.getDan());
-            }
         }
     }
 
@@ -256,7 +256,7 @@ public class EncogService extends IntentService {
         }
     }
 
-    private File getActualExchangeListWith31AddedPredictedLines() {
+    private File getActualExchangeListPredictedLines() {
         BufferedReader reader;
         BufferedWriter writer;
         try {

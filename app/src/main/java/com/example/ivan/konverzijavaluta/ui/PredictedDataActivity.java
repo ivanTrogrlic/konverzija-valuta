@@ -13,8 +13,11 @@ import android.widget.TextView;
 import com.example.ivan.konverzijavaluta.R;
 import com.example.ivan.konverzijavaluta.entitet.Dan;
 import com.example.ivan.konverzijavaluta.entitet.TecajnaLista;
+import com.example.ivan.konverzijavaluta.entitet.TecajnaListaPredicted;
+import com.example.ivan.konverzijavaluta.entitet.TecajnaListaWrapper;
 import com.example.ivan.konverzijavaluta.repository.DanRepository;
 import com.example.ivan.konverzijavaluta.repository.DrzavaRepository;
+import com.example.ivan.konverzijavaluta.repository.TecajnaListaPredictedRepository;
 import com.example.ivan.konverzijavaluta.repository.TecajnaListaRepository;
 
 import org.joda.time.LocalDate;
@@ -28,15 +31,16 @@ import butterknife.OnClick;
 /**
  * Created by ivan on 5/26/2016.
  */
-public class PastDataActivity extends AppCompatActivity {
+public class PredictedDataActivity extends AppCompatActivity {
 
     @InjectView(R.id.list) RecyclerView m_list;
     @InjectView(R.id.date) TextView     m_date;
 
-    private PastDataAdapter        m_pastDataAdapter;
-    private DanRepository          m_danRepository;
-    private DrzavaRepository       m_drzavaRepository;
-    private TecajnaListaRepository m_tecajnaListaRepository;
+    private PredictedDataAdapter            m_adapter;
+    private DanRepository                   m_danRepository;
+    private DrzavaRepository                m_drzavaRepository;
+    private TecajnaListaRepository          m_tecajnaListaRepository;
+    private TecajnaListaPredictedRepository m_tecajnaListaPredictedRepository;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -67,8 +71,8 @@ public class PastDataActivity extends AppCompatActivity {
     }
 
     private void initAdapter() {
-        m_pastDataAdapter = new PastDataAdapter(this);
-        m_list.setAdapter(m_pastDataAdapter);
+        m_adapter = new PredictedDataAdapter(this);
+        m_list.setAdapter(m_adapter);
         m_list.setLayoutManager(new LinearLayoutManager(this));
     }
 
@@ -76,6 +80,7 @@ public class PastDataActivity extends AppCompatActivity {
         m_danRepository = new DanRepository(getContentResolver());
         m_drzavaRepository = new DrzavaRepository(getContentResolver());
         m_tecajnaListaRepository = new TecajnaListaRepository(getContentResolver());
+        m_tecajnaListaPredictedRepository = new TecajnaListaPredictedRepository(getContentResolver());
     }
 
     @OnClick(R.id.select_date)
@@ -89,16 +94,21 @@ public class PastDataActivity extends AppCompatActivity {
                 m_date.setText(date.toString());
             }
         }, now.getYear(), now.getMonthOfYear(), now.getDayOfMonth());
-        datePickerDialog.getDatePicker().setMaxDate(now.toDate().getTime());
+        datePickerDialog.getDatePicker().setMaxDate(now.plusMonths(1).toDate().getTime());
         datePickerDialog.show();
     }
 
     private void setListData(LocalDate p_date) {
-        m_pastDataAdapter.clear();
+        m_adapter.clear();
         Dan dan = m_danRepository.getByDate(p_date);
         List<TecajnaLista> tecajnaLista = m_tecajnaListaRepository.getByDan(dan.getId());
-        m_pastDataAdapter.setItems(tecajnaLista);
-        m_pastDataAdapter.notifyDataSetChanged();
+        List<TecajnaListaPredicted> tecajnaListaPredicted = m_tecajnaListaPredictedRepository.getByDan(dan.getId());
+        TecajnaListaWrapper tecajnaListaWrapper = new TecajnaListaWrapper();
+        tecajnaListaWrapper.setTecajnaLista(tecajnaLista);
+        tecajnaListaWrapper.setTecajnaListaPredicted(tecajnaListaPredicted);
+
+        m_adapter.setItems(tecajnaListaWrapper);
+        m_adapter.notifyDataSetChanged();
     }
 
 }

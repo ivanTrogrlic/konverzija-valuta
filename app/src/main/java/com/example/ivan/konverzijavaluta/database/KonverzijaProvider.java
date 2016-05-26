@@ -35,8 +35,9 @@ public class KonverzijaProvider extends ContentProvider {
     static final int DAN    = 300;
     static final int DAN_ID = 301;
 
-    static final int TECAJNA_LISTA_PREDICTED    = 400;
-    static final int TECAJNA_LISTA_PREDICTED_ID = 401;
+    static final int TECAJNA_LISTA_PREDICTED                      = 400;
+    static final int TECAJNA_LISTA_PREDICTED_ID                   = 401;
+    static final int TECAJNA_LISTA_PREDICTED_WITH_DAN_WITH_DRZAVA = 403;
 
     private static UriMatcher buildUriMatcher() {
         UriMatcher retVal = new UriMatcher(UriMatcher.NO_MATCH);
@@ -54,6 +55,8 @@ public class KonverzijaProvider extends ContentProvider {
 
         retVal.addURI(KonverzijaContract.AUTHORITY, "tecajna_lista_predicted", TECAJNA_LISTA_PREDICTED);
         retVal.addURI(KonverzijaContract.AUTHORITY, "tecajna_lista_predicted/#", TECAJNA_LISTA_PREDICTED_ID);
+        retVal.addURI(KonverzijaContract.AUTHORITY, "tecajna_lista_predicted/with_dan_and_drzava",
+                      TECAJNA_LISTA_PREDICTED_WITH_DAN_WITH_DRZAVA);
 
         return retVal;
     }
@@ -79,6 +82,31 @@ public class KonverzijaProvider extends ContentProvider {
         map.put(TecajnaLista.KUPOVNI_TECAJ, TecajnaLista.KUPOVNI_TECAJ);
         map.put(TecajnaLista.SREDNJI_TECAJ, TecajnaLista.SREDNJI_TECAJ);
         map.put(TecajnaLista.PRODAJNI_TECAJ, TecajnaLista.PRODAJNI_TECAJ);
+
+        return map;
+    }
+
+    private static Map tecajnaListaPredictedProjectionMap() {
+        Map map = new HashMap<>();
+        map.put(Tables.DRZAVA + "$" + Drzava._ID,
+                Tables.DRZAVA + "." + Drzava._ID + " AS '" + Tables.DRZAVA + "$" + Drzava._ID + "'");
+        map.put(Tables.DRZAVA + "$" + Drzava.JEDINICA,
+                Tables.DRZAVA + "." + Drzava.JEDINICA + " AS '" + Tables.DRZAVA + "$" + Drzava.JEDINICA + "'");
+        map.put(Tables.DRZAVA + "$" + Drzava.SIFRA,
+                Tables.DRZAVA + "." + Drzava.SIFRA + " AS '" + Tables.DRZAVA + "$" + Drzava.SIFRA + "'");
+        map.put(Tables.DRZAVA + "$" + Drzava.VALUTA,
+                Tables.DRZAVA + "." + Drzava.VALUTA + " AS '" + Tables.DRZAVA + "$" + Drzava.VALUTA + "'");
+
+        map.put(Tables.DAN + "$" + Dan._ID, Tables.DAN + "." + Dan._ID + " AS '" + Tables.DAN + "$" + Dan._ID + "'");
+        map.put(Tables.DAN + "$" + Dan.DAN, Tables.DAN + "." + Dan.DAN + " AS '" + Tables.DAN + "$" + Dan.DAN + "'");
+
+        map.put(TecajnaListaPredicted._ID,
+                Tables.TECAJNA_LISTA_PREDCITED + "." + TecajnaListaPredicted._ID + " AS '" + Tables.TECAJNA_LISTA_PREDCITED + "$" + TecajnaListaPredicted._ID + "'");
+        map.put(TecajnaListaPredicted.DAN_ID, TecajnaListaPredicted.DAN_ID);
+        map.put(TecajnaListaPredicted.DRZAVA_ID, TecajnaListaPredicted.DRZAVA_ID);
+        map.put(TecajnaListaPredicted.KUPOVNI_TECAJ, TecajnaListaPredicted.KUPOVNI_TECAJ);
+        map.put(TecajnaListaPredicted.SREDNJI_TECAJ, TecajnaListaPredicted.SREDNJI_TECAJ);
+        map.put(TecajnaListaPredicted.PRODAJNI_TECAJ, TecajnaListaPredicted.PRODAJNI_TECAJ);
 
         return map;
     }
@@ -120,6 +148,10 @@ public class KonverzijaProvider extends ContentProvider {
                 break;
             case TECAJNA_LISTA_PREDICTED:
                 queryBuilder.setTables(Tables.TECAJNA_LISTA_PREDCITED);
+                break;
+            case TECAJNA_LISTA_PREDICTED_WITH_DAN_WITH_DRZAVA:
+                queryBuilder.setTables(Tables.TECAJNA_LISTA_PREDICTED_JOIN_DAN_JOIN_DRZAVA);
+                queryBuilder.setProjectionMap(tecajnaListaPredictedProjectionMap());
                 break;
             case DAN_ID:
                 queryBuilder.setTables(Tables.DAN);

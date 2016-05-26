@@ -28,6 +28,13 @@ public class KonverzijaDatabase extends SQLiteOpenHelper {
                 + " ON " + TECAJNA_LISTA + "." + TecajnaLista.DAN_ID + "=" + DAN + "." + Dan._ID
                 + " LEFT JOIN " + DRZAVA
                 + " ON " + TECAJNA_LISTA + "." + TecajnaLista.DRZAVA_ID + "=" + DRZAVA + "." + Dan._ID;
+
+        // TecajnaLista + Dan + Drzava
+        String TECAJNA_LISTA_PREDICTED_JOIN_DAN_JOIN_DRZAVA = TECAJNA_LISTA_PREDCITED
+                + " LEFT JOIN " + DAN
+                + " ON " + TECAJNA_LISTA_PREDCITED + "." + TecajnaLista.DAN_ID + "=" + DAN + "." + Dan._ID
+                + " LEFT JOIN " + DRZAVA
+                + " ON " + TECAJNA_LISTA_PREDCITED + "." + TecajnaLista.DRZAVA_ID + "=" + DRZAVA + "." + Dan._ID;
     }
 
     public KonverzijaDatabase(Context context) {
