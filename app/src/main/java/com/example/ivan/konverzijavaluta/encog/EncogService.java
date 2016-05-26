@@ -243,6 +243,10 @@ public class EncogService extends IntentService {
             tecajnaListaPredicted.setSrednjiTecaj(tecaj);
             tecajnaListaPredicted.setProdajniTecaj(tecaj);
             tecajnaListaPredictedRepository.insert(tecajnaListaPredicted);
+
+            if (i == Valute.values().length - 1) {
+                Preferences.saveDate(getApplicationContext(), Preferences.LAST_PREDICTED_DATE, dan.getDan());
+            }
         }
     }
 

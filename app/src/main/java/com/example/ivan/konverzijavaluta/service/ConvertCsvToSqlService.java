@@ -90,7 +90,7 @@ public class ConvertCsvToSqlService extends IntentService {
 
             ReadCSV csv = new ReadCSV(file, true, new CSVFormat());
             save(csv);
-            file.delete();
+            file.delete(); // Delete it cause it temporary
 
             Preferences.saveBoolean(getApplicationContext(), Preferences.CONVERTED_CSV_TO_SQL, true);
         } catch (IOException | ParseException e) {

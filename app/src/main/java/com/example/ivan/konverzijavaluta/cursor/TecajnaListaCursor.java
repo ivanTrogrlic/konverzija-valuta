@@ -43,7 +43,11 @@ public class TecajnaListaCursor extends AbstractCursor {
             }
         }
 
-        tecajnaLista.setId(getLong(KonverzijaContract.TecajnaLista._ID));
+        Long id = getLong(KonverzijaContract.TecajnaLista._ID);
+        if (id == null) {
+            id = getLong(Tables.TECAJNA_LISTA + "$" + KonverzijaContract.TecajnaLista._ID);
+        }
+        tecajnaLista.setId(id);
         tecajnaLista.setKupovniTecaj(getBigDecimal(KonverzijaContract.TecajnaLista.KUPOVNI_TECAJ));
         tecajnaLista.setSrednjiTecaj(getBigDecimal(KonverzijaContract.TecajnaLista.SREDNJI_TECAJ));
         tecajnaLista.setProdajniTecaj(getBigDecimal(KonverzijaContract.TecajnaLista.PRODAJNI_TECAJ));

@@ -17,6 +17,8 @@ public class KonverzijaContract {
     public static final String PATH_TECAJNA_LISTA_PREDICTED = "tecajna_lista_predicted";
     public static final String PATH_DAN                     = "dan";
 
+    public static final String PATH_WITH_DAN_AND_DRZAVA = "with_dan_and_drzava";
+
     public static Uri buildUri(Uri p_uri, Long p_id) {
         if (p_id == null) {
             p_id = -1l;

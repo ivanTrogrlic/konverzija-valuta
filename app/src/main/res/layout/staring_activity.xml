@@ -26,11 +26,13 @@
             android:text="@string/exchange_calc" />
 
         <Button
+            android:id="@+id/past_data"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_margin="10dp"
             android:layout_weight="1"
-            android:elevation="3dp" />
+            android:elevation="3dp"
+            android:text="@string/past_data" />
 
         <Button
             android:layout_width="match_parent"

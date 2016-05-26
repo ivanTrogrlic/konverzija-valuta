@@ -21,6 +21,13 @@ public class KonverzijaDatabase extends SQLiteOpenHelper {
         String TECAJNA_LISTA           = "tecajna_lista";
         String TECAJNA_LISTA_PREDCITED = "tecajna_lista_predicted";
         String DAN                     = "dan";
+
+        // TecajnaLista + Dan + Drzava
+        String TECAJNA_LISTA_JOIN_DAN_JOIN_DRZAVA = TECAJNA_LISTA
+                + " LEFT JOIN " + DAN
+                + " ON " + TECAJNA_LISTA + "." + TecajnaLista.DAN_ID + "=" + DAN + "." + Dan._ID
+                + " LEFT JOIN " + DRZAVA
+                + " ON " + TECAJNA_LISTA + "." + TecajnaLista.DRZAVA_ID + "=" + DRZAVA + "." + Dan._ID;
     }
 
     public KonverzijaDatabase(Context context) {

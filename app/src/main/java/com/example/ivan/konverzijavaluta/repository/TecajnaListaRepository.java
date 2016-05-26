@@ -9,8 +9,14 @@ import android.support.annotation.Nullable;
 
 import com.example.ivan.konverzijavaluta.cursor.TecajnaListaCursor;
 import com.example.ivan.konverzijavaluta.database.KonverzijaContract;
+import com.example.ivan.konverzijavaluta.database.KonverzijaContract.Dan;
+import com.example.ivan.konverzijavaluta.database.KonverzijaContract.Drzava;
+import com.example.ivan.konverzijavaluta.database.KonverzijaDatabase.Tables;
 import com.example.ivan.konverzijavaluta.entitet.TecajnaLista;
 import com.example.ivan.konverzijavaluta.util.DbUtils;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by Ivan on 12.4.2016..
@@ -26,18 +32,21 @@ public class TecajnaListaRepository {
     /**
      * Returns Tecajna lista for given id, or null if it doesn't exists.
      */
+    @Nullable
     public TecajnaLista getById(long p_id) {
         String[] projection = getProjection();
         String whereClause = KonverzijaContract.TecajnaLista._ID + "=?";
         String[] whereArgs = {String.valueOf(p_id)};
 
-        return query(projection, whereClause, whereArgs);
+        List<TecajnaLista> list = query(projection, whereClause, whereArgs);
+        return list == null ? null : list.get(0);
     }
 
     /**
      * Returns TecajnaLista for given Drzava ID, or null if it doesn't exists.
      */
-    public TecajnaLista getByDrzava(long p_drzavaId) {
+    @Nullable
+    public List<TecajnaLista> getByDrzava(long p_drzavaId) {
         String[] projection = getProjection();
         String whereClause = KonverzijaContract.TecajnaLista.DRZAVA_ID + "=?";
         String[] whereArgs = {String.valueOf(p_drzavaId)};
@@ -48,7 +57,8 @@ public class TecajnaListaRepository {
     /**
      * Returns TecajnaLista for given Dan ID, or null if it doesn't exists.
      */
-    public TecajnaLista getByDan(long p_danId) {
+    @Nullable
+    public List<TecajnaLista> getByDan(long p_danId) {
         String[] projection = getProjection();
         String whereClause = KonverzijaContract.TecajnaLista.DAN_ID + "=?";
         String[] whereArgs = {String.valueOf(p_danId)};
@@ -59,12 +69,14 @@ public class TecajnaListaRepository {
     /**
      * Returns TecajnaLista for given Dan ID and Drzava ID, or null if it doesn't exists.
      */
+    @Nullable
     public TecajnaLista getByDanAndDrzava(long p_danId, long p_drzavaId) {
         String[] projection = getProjection();
         String whereClause = KonverzijaContract.TecajnaLista.DAN_ID + "=? AND " + KonverzijaContract.TecajnaLista.DRZAVA_ID + "=?";
         String[] whereArgs = {String.valueOf(p_danId), String.valueOf(p_drzavaId)};
 
-        return query(projection, whereClause, whereArgs);
+        List<TecajnaLista> list = query(projection, whereClause, whereArgs);
+        return list == null ? null : list.get(0);
     }
 
     /**
@@ -99,23 +111,28 @@ public class TecajnaListaRepository {
     private String[] getProjection() {
         return new String[]{KonverzijaContract.TecajnaLista._ID, KonverzijaContract.TecajnaLista.DAN_ID,
                 KonverzijaContract.TecajnaLista.DRZAVA_ID, KonverzijaContract.TecajnaLista.KUPOVNI_TECAJ,
-                KonverzijaContract.TecajnaLista.SREDNJI_TECAJ, KonverzijaContract.TecajnaLista.PRODAJNI_TECAJ};
+                KonverzijaContract.TecajnaLista.SREDNJI_TECAJ, KonverzijaContract.TecajnaLista.PRODAJNI_TECAJ,
+                Tables.DAN + "$" + Dan._ID, Tables.DAN + "$" + Dan.DAN,
+                Tables.DRZAVA + "$" + Drzava._ID, Tables.DRZAVA + "$" + Drzava.JEDINICA, Tables.DRZAVA + "$" + Drzava.SIFRA, Tables.DRZAVA + "$" + Drzava.VALUTA};
     }
 
     @Nullable
-    private TecajnaLista query(String[] p_projection, String p_whereClause, String[] p_whereArgs) {
-        Cursor cursor = m_contentResolver.query(KonverzijaContract.TecajnaLista.CONTENT_URI, p_projection,
-                                                p_whereClause, p_whereArgs, null);
+    private List<TecajnaLista> query(String[] p_projection, String p_whereClause, String[] p_whereArgs) {
+        Uri uri = KonverzijaContract.TecajnaLista.CONTENT_URI
+                .buildUpon()
+                .appendPath(KonverzijaContract.PATH_WITH_DAN_AND_DRZAVA)
+                .build();
+        Cursor cursor = m_contentResolver.query(uri, p_projection, p_whereClause, p_whereArgs, null);
         if (cursor == null) {
             return null;
         }
 
-        TecajnaLista tecajnaLista = null;
-        if (cursor.moveToFirst()) {
-            tecajnaLista = new TecajnaListaCursor(m_contentResolver, cursor).toTecajnaLista();
+        List<TecajnaLista> lista = new ArrayList<>();
+        while (cursor.moveToNext()) {
+            lista.add(new TecajnaListaCursor(m_contentResolver, cursor).toTecajnaLista());
         }
 
         cursor.close();
-        return tecajnaLista;
+        return lista;
     }
 }

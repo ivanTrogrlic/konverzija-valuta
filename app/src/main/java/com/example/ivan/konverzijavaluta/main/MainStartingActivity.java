@@ -1,5 +1,6 @@
 package com.example.ivan.konverzijavaluta.main;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -10,6 +11,7 @@ import com.example.ivan.konverzijavaluta.R;
 import com.example.ivan.konverzijavaluta.encog.EncogService;
 import com.example.ivan.konverzijavaluta.service.ConvertCsvToSqlService;
 import com.example.ivan.konverzijavaluta.service.DownloadIntentService;
+import com.example.ivan.konverzijavaluta.ui.PastDataActivity;
 import com.example.ivan.konverzijavaluta.util.Preferences;
 
 import org.joda.time.LocalDate;
@@ -61,7 +63,16 @@ public class MainStartingActivity extends AppCompatActivity {
 
     @OnClick(R.id.calculator)
     public void openCalculator() {
-        EncogService.start(this); //TODO move this elsewhere
+        LocalDate lastPredictedDate = Preferences.loadDate(this, Preferences.LAST_PREDICTED_DATE, LocalDate.now());
+        if (LocalDate.now().isAfter(lastPredictedDate)) {
+            EncogService.start(this); //TODO move this elsewhere
+        }
+    }
+
+    @OnClick(R.id.past_data)
+    public void openPastData() {
+        Intent intent = new Intent(this, PastDataActivity.class);
+        startActivity(intent);
     }
 
 }

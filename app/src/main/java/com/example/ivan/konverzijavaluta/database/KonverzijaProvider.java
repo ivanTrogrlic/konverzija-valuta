@@ -16,18 +16,25 @@ import com.example.ivan.konverzijavaluta.database.KonverzijaContract.TecajnaList
 import com.example.ivan.konverzijavaluta.database.KonverzijaContract.TecajnaListaPredicted;
 import com.example.ivan.konverzijavaluta.database.KonverzijaDatabase.Tables;
 
+import java.util.HashMap;
+import java.util.Map;
+
 
 public class KonverzijaProvider extends ContentProvider {
     private SQLiteOpenHelper m_sqLiteHelper;
 
     static final UriMatcher URI_MATCHER = buildUriMatcher();
 
-    static final int DRZAVA                     = 100;
-    static final int DRZAVA_ID                  = 101;
-    static final int TECAJNA_LISTA              = 200;
-    static final int TECAJNA_LISTA_ID           = 201;
-    static final int DAN                        = 300;
-    static final int DAN_ID                     = 301;
+    static final int DRZAVA    = 100;
+    static final int DRZAVA_ID = 101;
+
+    static final int TECAJNA_LISTA                      = 200;
+    static final int TECAJNA_LISTA_ID                   = 201;
+    static final int TECAJNA_LISTA_WITH_DAN_WITH_DRZAVA = 202;
+
+    static final int DAN    = 300;
+    static final int DAN_ID = 301;
+
     static final int TECAJNA_LISTA_PREDICTED    = 400;
     static final int TECAJNA_LISTA_PREDICTED_ID = 401;
 
@@ -39,6 +46,8 @@ public class KonverzijaProvider extends ContentProvider {
 
         retVal.addURI(KonverzijaContract.AUTHORITY, "tecajna_lista", TECAJNA_LISTA);
         retVal.addURI(KonverzijaContract.AUTHORITY, "tecajna_lista/#", TECAJNA_LISTA_ID);
+        retVal.addURI(KonverzijaContract.AUTHORITY, "tecajna_lista/with_dan_and_drzava",
+                      TECAJNA_LISTA_WITH_DAN_WITH_DRZAVA);
 
         retVal.addURI(KonverzijaContract.AUTHORITY, "dan", DAN);
         retVal.addURI(KonverzijaContract.AUTHORITY, "dan/#", DAN_ID);
@@ -48,6 +57,32 @@ public class KonverzijaProvider extends ContentProvider {
 
         return retVal;
     }
+
+    private static Map tecajnaListaProjectionMap() {
+        Map map = new HashMap<>();
+        map.put(Tables.DRZAVA + "$" + Drzava._ID,
+                Tables.DRZAVA + "." + Drzava._ID + " AS '" + Tables.DRZAVA + "$" + Drzava._ID + "'");
+        map.put(Tables.DRZAVA + "$" + Drzava.JEDINICA,
+                Tables.DRZAVA + "." + Drzava.JEDINICA + " AS '" + Tables.DRZAVA + "$" + Drzava.JEDINICA + "'");
+        map.put(Tables.DRZAVA + "$" + Drzava.SIFRA,
+                Tables.DRZAVA + "." + Drzava.SIFRA + " AS '" + Tables.DRZAVA + "$" + Drzava.SIFRA + "'");
+        map.put(Tables.DRZAVA + "$" + Drzava.VALUTA,
+                Tables.DRZAVA + "." + Drzava.VALUTA + " AS '" + Tables.DRZAVA + "$" + Drzava.VALUTA + "'");
+
+        map.put(Tables.DAN + "$" + Dan._ID, Tables.DAN + "." + Dan._ID + " AS '" + Tables.DAN + "$" + Dan._ID + "'");
+        map.put(Tables.DAN + "$" + Dan.DAN, Tables.DAN + "." + Dan.DAN + " AS '" + Tables.DAN + "$" + Dan.DAN + "'");
+
+        map.put(TecajnaLista._ID,
+                Tables.TECAJNA_LISTA + "." + TecajnaLista._ID + " AS '" + Tables.TECAJNA_LISTA + "$" + TecajnaLista._ID + "'");
+        map.put(TecajnaLista.DAN_ID, TecajnaLista.DAN_ID);
+        map.put(TecajnaLista.DRZAVA_ID, TecajnaLista.DRZAVA_ID);
+        map.put(TecajnaLista.KUPOVNI_TECAJ, TecajnaLista.KUPOVNI_TECAJ);
+        map.put(TecajnaLista.SREDNJI_TECAJ, TecajnaLista.SREDNJI_TECAJ);
+        map.put(TecajnaLista.PRODAJNI_TECAJ, TecajnaLista.PRODAJNI_TECAJ);
+
+        return map;
+    }
+
 
     @Override
     public boolean onCreate() {
@@ -74,6 +109,10 @@ public class KonverzijaProvider extends ContentProvider {
                 break;
             case TECAJNA_LISTA:
                 queryBuilder.setTables(Tables.TECAJNA_LISTA);
+                break;
+            case TECAJNA_LISTA_WITH_DAN_WITH_DRZAVA:
+                queryBuilder.setTables(Tables.TECAJNA_LISTA_JOIN_DAN_JOIN_DRZAVA);
+                queryBuilder.setProjectionMap(tecajnaListaProjectionMap());
                 break;
             case TECAJNA_LISTA_PREDICTED_ID:
                 queryBuilder.setTables(Tables.TECAJNA_LISTA_PREDCITED);
