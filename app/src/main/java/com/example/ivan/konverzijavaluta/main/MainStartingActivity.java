@@ -14,7 +14,6 @@ import android.widget.Toast;
 import com.example.ivan.konverzijavaluta.R;
 import com.example.ivan.konverzijavaluta.service.DownloadIntentService;
 import com.example.ivan.konverzijavaluta.service.SaveCsvFileToSqlService;
-import com.example.ivan.konverzijavaluta.ui.HrkPredictedActivity;
 import com.example.ivan.konverzijavaluta.ui.PastDataActivity;
 import com.example.ivan.konverzijavaluta.ui.PredictedDataActivity;
 import com.example.ivan.konverzijavaluta.util.Preferences;
@@ -96,14 +95,6 @@ public class MainStartingActivity extends AppCompatActivity {
         if (checkIfHasLatestData()) return;
 
         Intent intent = new Intent(this, PredictedDataActivity.class);
-        startActivity(intent);
-    }
-
-    @OnClick(R.id.predicted_hrk)
-    public void openHrkData() {
-        if (checkIfHasLatestData()) return;
-
-        Intent intent = new Intent(this, HrkPredictedActivity.class);
         startActivity(intent);
     }
 

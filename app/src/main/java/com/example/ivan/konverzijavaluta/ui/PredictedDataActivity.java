@@ -1,15 +1,19 @@
 package com.example.ivan.konverzijavaluta.ui;
 
-import android.app.DatePickerDialog;
-import android.app.DatePickerDialog.OnDateSetListener;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
-import android.widget.DatePicker;
+import android.view.View;
+import android.widget.ArrayAdapter;
+import android.widget.ProgressBar;
+import android.widget.Spinner;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.example.ivan.konverzijavaluta.R;
 import com.example.ivan.konverzijavaluta.encog.EncogService;
@@ -17,15 +21,16 @@ import com.example.ivan.konverzijavaluta.entitet.Dan;
 import com.example.ivan.konverzijavaluta.entitet.TecajnaLista;
 import com.example.ivan.konverzijavaluta.entitet.TecajnaListaPredicted;
 import com.example.ivan.konverzijavaluta.entitet.TecajnaListaWrapper;
+import com.example.ivan.konverzijavaluta.entitet.Valute;
 import com.example.ivan.konverzijavaluta.repository.DanRepository;
 import com.example.ivan.konverzijavaluta.repository.DrzavaRepository;
 import com.example.ivan.konverzijavaluta.repository.TecajnaListaPredictedRepository;
 import com.example.ivan.konverzijavaluta.repository.TecajnaListaRepository;
-import com.example.ivan.konverzijavaluta.util.Preferences;
 import com.example.ivan.konverzijavaluta.util.ServiceUtils;
 
 import org.joda.time.LocalDate;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import butterknife.ButterKnife;
@@ -37,11 +42,13 @@ import butterknife.OnClick;
  */
 public class PredictedDataActivity extends AppCompatActivity {
 
-    @InjectView(R.id.list)    RecyclerView m_list;
-    @InjectView(R.id.date)    TextView     m_date;
-    @InjectView(R.id.header1) TextView     m_header1;
-    @InjectView(R.id.header2) TextView     m_header2;
-    @InjectView(R.id.header3) TextView     m_header3;
+    @InjectView(R.id.list)                 RecyclerView m_list;
+    @InjectView(R.id.toolbar_progress_bar) ProgressBar  m_progressBar;
+    @InjectView(R.id.currency)             TextView     m_currency;
+    @InjectView(R.id.spinner)              Spinner      m_spinner;
+    @InjectView(R.id.header1)              TextView     m_header1;
+    @InjectView(R.id.header2)              TextView     m_header2;
+    @InjectView(R.id.header3)              TextView     m_header3;
 
     private PredictedDataAdapter            m_adapter;
     private DanRepository                   m_danRepository;
@@ -49,6 +56,9 @@ public class PredictedDataActivity extends AppCompatActivity {
     private TecajnaListaRepository          m_tecajnaListaRepository;
     private TecajnaListaPredictedRepository m_tecajnaListaPredictedRepository;
     private LocalDate                       m_lastPredictedDate;
+
+    private EncogReceiver m_receiver;
+    private IntentFilter  m_filter;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -62,14 +72,22 @@ public class PredictedDataActivity extends AppCompatActivity {
         initRepositories();
         initAdapter();
         setHeader();
-
-        LocalDate lastPredictedDate = Preferences.loadDate(this, Preferences.LAST_PREDICTED_DATE, LocalDate.now());
-        if (LocalDate.now().isAfter(lastPredictedDate.minusDays(1))) {
-            // If today is >= last day of the month, make new calculations for the next month
-            startServiceIfNotRunning();
-        }
-
+        initSpinner();
+        initReceiver();
     }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        unregisterReceiver(m_receiver);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        registerReceiver(m_receiver, m_filter);
+    }
+
 
     @Override
     protected void onDestroy() {
@@ -87,9 +105,16 @@ public class PredictedDataActivity extends AppCompatActivity {
     }
 
     private void setHeader() {
-        m_header1.setText(R.string.currency);
+        m_header1.setText(R.string.date);
         m_header2.setText(R.string.predicted);
         m_header3.setText(R.string.real);
+    }
+
+    private void initReceiver() {
+        m_filter = new IntentFilter(EncogReceiver.ACTION_RESP);
+        m_filter.addCategory(Intent.CATEGORY_DEFAULT);
+        m_receiver = new EncogReceiver();
+        registerReceiver(m_receiver, m_filter);
     }
 
     private void initAdapter() {
@@ -105,31 +130,32 @@ public class PredictedDataActivity extends AppCompatActivity {
         m_tecajnaListaPredictedRepository = new TecajnaListaPredictedRepository(getContentResolver());
     }
 
-    @OnClick(R.id.select_date)
-    public void setListaForDate() {
-        LocalDate lastPredictedDate = Preferences.loadDate(this, Preferences.LAST_PREDICTED_HRK_DATE, LocalDate.now());
-        if (LocalDate.now().isAfter(lastPredictedDate.minusDays(1))) {
-            startServiceIfNotRunning();
-            Toast.makeText(this, R.string.data_not_predicted, Toast.LENGTH_SHORT).show();
-            return;
+    public void initSpinner() {
+        List<String> list = new ArrayList<>();
+        for (Valute valute : Valute.values()) {
+            list.add(valute.name());
         }
-
-        LocalDate now = LocalDate.now();
-        DatePickerDialog datePickerDialog = new DatePickerDialog(this, new OnDateSetListener() {
-            @Override
-            public void onDateSet(DatePicker view, int year, int monthOfYear, int dayOfMonth) {
-                LocalDate date = new LocalDate(year, monthOfYear + 1, dayOfMonth);
-                setListData(date);
-                m_date.setText(date.toString());
-            }
-        }, now.getYear(), now.getMonthOfYear() - 1, now.getDayOfMonth());
-        datePickerDialog.getDatePicker().setMaxDate(lastPredictedDate.toDate().getTime());
-        datePickerDialog.show();
+        ArrayAdapter<String> dataAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, list);
+        dataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        m_spinner.setAdapter(dataAdapter);
     }
 
-    private void startServiceIfNotRunning() {
+    @OnClick(R.id.predict)
+    public void predict() {
+        String valuta = String.valueOf(m_spinner.getSelectedItem());
+        m_currency.setText(valuta);
+//        LocalDate lastPredictedDate = Preferences.loadDate(this, Preferences.LAST_PREDICTED_DATE, LocalDate.now());
+//        if (LocalDate.now().isAfter(lastPredictedDate.minusDays(1))) {
+        // If today is >= last day of the month, make new calculations for the next month
+        //TODO check if today is before last predicted date for selected value, if it is, dont start service, just query predict data for the last month
+        startServiceIfNotRunning(valuta);
+//        }
+    }
+
+    private void startServiceIfNotRunning(String p_valuta) {
         if (!ServiceUtils.isMyServiceRunning(this, EncogService.SERVICE_PATH)) {
-            EncogService.start(this);
+            EncogService.start(this, p_valuta);
+            m_progressBar.setVisibility(View.VISIBLE);
         }
     }
 
@@ -145,6 +171,18 @@ public class PredictedDataActivity extends AppCompatActivity {
 
         m_adapter.setItems(tecajnaListaWrapper);
         m_adapter.notifyDataSetChanged();
+    }
+
+    public class EncogReceiver extends BroadcastReceiver {
+
+        public static final String ACTION_RESP = "com.example.ivan.konverzijavaluta.ENCOG";
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            m_progressBar.setVisibility(View.INVISIBLE);
+            setListData(LocalDate.now().plusDays(1));
+        }
+
     }
 
 }

@@ -31,11 +31,11 @@ import butterknife.OnClick;
  */
 public class PastDataActivity extends AppCompatActivity {
 
-    @InjectView(R.id.list)    RecyclerView m_list;
-    @InjectView(R.id.date)    TextView     m_date;
-    @InjectView(R.id.header1) TextView     m_header1;
-    @InjectView(R.id.header2) TextView     m_header2;
-    @InjectView(R.id.header3) TextView     m_header3;
+    @InjectView(R.id.list)     RecyclerView m_list;
+    @InjectView(R.id.currency) TextView     m_date;
+    @InjectView(R.id.header1)  TextView     m_header1;
+    @InjectView(R.id.header2)  TextView     m_header2;
+    @InjectView(R.id.header3)  TextView     m_header3;
 
     private PastDataAdapter        m_pastDataAdapter;
     private DanRepository          m_danRepository;
@@ -89,7 +89,7 @@ public class PastDataActivity extends AppCompatActivity {
         m_tecajnaListaRepository = new TecajnaListaRepository(getContentResolver());
     }
 
-    @OnClick(R.id.select_date)
+    @OnClick(R.id.predict)
     public void setListaForDate() {
         LocalDate now = LocalDate.now();
         DatePickerDialog datePickerDialog = new DatePickerDialog(this, new OnDateSetListener() {

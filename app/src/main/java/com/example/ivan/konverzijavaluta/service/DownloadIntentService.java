@@ -5,7 +5,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.support.annotation.NonNull;
 
-import com.example.ivan.konverzijavaluta.encog.EncogHrkService;
 import com.example.ivan.konverzijavaluta.entitet.Dan;
 import com.example.ivan.konverzijavaluta.entitet.Drzava;
 import com.example.ivan.konverzijavaluta.entitet.TecajnaLista;
@@ -144,7 +143,6 @@ public class DownloadIntentService extends IntentService {
         }
 
         appendResponseToCsv();
-        appendResponseToHrkCsv();
         Preferences.saveDate(getApplicationContext(), Preferences.LAST_DOWNLOADED_EXCHANGE_LIST, LocalDate.now());
         file.delete();
     }
@@ -226,48 +224,6 @@ public class DownloadIntentService extends IntentService {
 
         p_sb.append("\n");
         return p_currentDate.plusDays(1);
-    }
-
-    private void appendResponseToHrkCsv() throws IOException {
-        if (!Preferences.loadBoolean(getApplicationContext(), Preferences.INITIAL_HRK_SAVED, false)) {
-            FileUtils.copyFileToExternalDirectory(getApplicationContext(), EncogHrkService.HRK_ACTUAL,
-                                                  EncogHrkService.HRK_ACTUAL);
-            Preferences.saveBoolean(getApplicationContext(), Preferences.INITIAL_HRK_SAVED, true);
-        }
-
-        String path = getExternalFilesDir(null).getPath() + "/" + EncogHrkService.HRK_ACTUAL;
-        BufferedWriter writer = new BufferedWriter(new FileWriter(path, true));
-
-        LocalDate currentDate = Preferences.getLastDownloadDate(getApplicationContext());
-        StringBuilder sb = new StringBuilder();
-        while (currentDate.isBefore(LocalDate.now().plusDays(1))) {
-            Dan dan = m_danRepository.getByDate(currentDate);
-            if (dan == null) {
-                currentDate = currentDate.plusDays(1); // No exchange list available for today yet
-                continue;
-            }
-
-            sb.append(currentDate.toString(SaveCsvFileToSqlService.DATE_FORMAT)).append(",");
-
-            Drzava drzava = m_drzavaRepository.getByValuta(Valute.HRK.name());
-            if (drzava == null) {
-                sb.append(SaveCsvFileToSqlService.MISSING_VALUE);
-                continue;
-            }
-
-            TecajnaLista tecajnaLista = m_tecajnaListaRepository.getByDanAndDrzava(dan.getId(), drzava.getId());
-            if (tecajnaLista == null) {
-                sb.append(SaveCsvFileToSqlService.MISSING_VALUE);
-                continue;
-            }
-
-            sb.append(tecajnaLista.getSrednjiTecaj()).append("\n");
-            currentDate = currentDate.plusDays(1);
-        }
-
-        String result = sb.toString();
-        writer.write(result);
-        writer.close();
     }
 
     private void insertTecajnaLista(String p_value, Dan p_dan, Drzava p_drzava) {

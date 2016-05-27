@@ -31,6 +31,7 @@
     <string name="predicted_data">Predicted data</string>
     <string name="hrk_data">Predicted HRK data</string>¸
     <string name="select_date">Select date</string>
+    <string name="predict">Predict</string>
     <string name="no_real_data">No real data yet</string>
     <string name="data_not_predicted">Data not predicted yet, please wait</string>
     <string name="no_data_for_day">No data for this day yet</string>

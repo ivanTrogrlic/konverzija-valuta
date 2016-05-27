@@ -64,7 +64,7 @@ public class PredictedDataAdapter extends RecyclerView.Adapter<RecyclerView.View
         }
 
         ViewHolder viewHolder = (ViewHolder) holder;
-        viewHolder.m_firstRow.setText(tecajnaListaPredicted.getDrzava().getValuta());
+        viewHolder.m_firstRow.setText(tecajnaListaPredicted.getDan().getDan().toString());
         viewHolder.m_secondRow.setText(
                 tecajnaListaPredicted.getSrednjiTecaj().setScale(4, RoundingMode.HALF_UP).toString());
 

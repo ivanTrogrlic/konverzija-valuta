@@ -11,27 +11,34 @@
         layout="@layout/toolbar" />
 
     <Button
-        android:id="@+id/select_date"
+        android:id="@+id/predict"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@id/toolbar"
         android:layout_margin="5dp"
-        android:text="@string/select_date" />
+        android:text="@string/predict" />
+
+    <Spinner
+        android:id="@+id/spinner"
+        android:layout_width="100dp"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/predict"
+        android:layout_margin="10dp" />
 
     <TextView
-        android:id="@+id/date"
+        android:id="@+id/currency"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@id/select_date"
+        android:layout_below="@id/spinner"
         android:layout_margin="5dp"
         android:gravity="center"
-        android:text="@string/select_date" />
+        android:text="@string/currency" />
 
     <LinearLayout
         android:id="@+id/header"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@id/date"
+        android:layout_below="@id/currency"
         android:orientation="horizontal"
         android:padding="3dp">
 
