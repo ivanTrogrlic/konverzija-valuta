@@ -27,11 +27,54 @@
         android:gravity="center"
         android:text="@string/select_date" />
 
+    <LinearLayout
+        android:id="@+id/header"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/date"
+        android:orientation="horizontal"
+        android:padding="3dp">
+
+        <TextView
+            android:id="@+id/header1"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_margin="3dp"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="PLACEHOLDER"
+            android:textAllCaps="true"
+            android:textSize="15dp" />
+
+        <TextView
+            android:id="@+id/header2"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_margin="3dp"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="PLACEHOLDER"
+            android:textAllCaps="true"
+            android:textSize="15dp" />
+
+        <TextView
+            android:id="@+id/header3"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_margin="3dp"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="PLACEHOLDER"
+            android:textAllCaps="true"
+            android:textSize="15dp" />
+
+    </LinearLayout>
+
     <android.support.v7.widget.RecyclerView
         android:id="@+id/list"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@id/date"
+        android:layout_below="@id/header"
         android:divider="@android:color/transparent"
         android:dividerHeight="1dp"
         android:listSelector="@android:color/black" />

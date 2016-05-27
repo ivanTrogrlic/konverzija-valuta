@@ -107,6 +107,7 @@ public class KonverzijaProvider extends ContentProvider {
         map.put(TecajnaListaPredicted.KUPOVNI_TECAJ, TecajnaListaPredicted.KUPOVNI_TECAJ);
         map.put(TecajnaListaPredicted.SREDNJI_TECAJ, TecajnaListaPredicted.SREDNJI_TECAJ);
         map.put(TecajnaListaPredicted.PRODAJNI_TECAJ, TecajnaListaPredicted.PRODAJNI_TECAJ);
+        map.put(TecajnaListaPredicted.SOLO_PREDICTED, TecajnaListaPredicted.SOLO_PREDICTED);
 
         return map;
     }

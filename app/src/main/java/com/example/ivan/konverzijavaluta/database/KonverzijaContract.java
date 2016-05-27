@@ -70,6 +70,7 @@ public class KonverzijaContract {
         String KUPOVNI_TECAJ  = "kupovni_tecaj";
         String SREDNJI_TECAJ  = "srednji_tecaj";
         String PRODAJNI_TECAJ = "prodajni_tecaj";
+        String SOLO_PREDICTED = "solo_predicted";
     }
 
     public interface Dan {

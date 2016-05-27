@@ -1,50 +1,75 @@
 package com.example.ivan.konverzijavaluta.main;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.widget.ProgressBar;
+import android.widget.Toast;
 
 import com.example.ivan.konverzijavaluta.R;
-import com.example.ivan.konverzijavaluta.encog.EncogService;
-import com.example.ivan.konverzijavaluta.service.ConvertCsvToSqlService;
 import com.example.ivan.konverzijavaluta.service.DownloadIntentService;
+import com.example.ivan.konverzijavaluta.service.SaveCsvFileToSqlService;
+import com.example.ivan.konverzijavaluta.ui.HrkPredictedActivity;
 import com.example.ivan.konverzijavaluta.ui.PastDataActivity;
 import com.example.ivan.konverzijavaluta.ui.PredictedDataActivity;
 import com.example.ivan.konverzijavaluta.util.Preferences;
+import com.example.ivan.konverzijavaluta.util.ServiceUtils;
 
 import org.joda.time.LocalDate;
 
 import butterknife.ButterKnife;
+import butterknife.InjectView;
 import butterknife.OnClick;
 
 public class MainStartingActivity extends AppCompatActivity {
 
-    static ProgressBar progressBar;
+    @InjectView(R.id.toolbar)              Toolbar     m_toolbar;
+    @InjectView(R.id.toolbar_progress_bar) ProgressBar m_progressBar;
+
+    private DownloadReceiver m_downloadReceiver;
+    private IntentFilter     m_filter;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.staring_activity);
-        progressBar = (ProgressBar) findViewById(R.id.toolbar_progress_bar);
 
-        Toolbar mToolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(mToolbar);
-        progressBar.setVisibility(View.INVISIBLE);
+        setSupportActionBar(m_toolbar);
 
         ButterKnife.inject(this);
+
+        m_filter = new IntentFilter(DownloadReceiver.ACTION_RESP);
+        m_filter.addCategory(Intent.CATEGORY_DEFAULT);
+        m_downloadReceiver = new DownloadReceiver();
+        registerReceiver(m_downloadReceiver, m_filter);
 
         if (savedInstanceState == null) {
             if (!Preferences.getLastDownloadDate(getApplicationContext()).equals(LocalDate.now())) {
                 DownloadIntentService.start(this);
+                m_progressBar.setVisibility(View.VISIBLE);
             }
 
             if (!Preferences.loadBoolean(getApplicationContext(), Preferences.CONVERTED_CSV_TO_SQL, false)) {
-                ConvertCsvToSqlService.start(this);
+                SaveCsvFileToSqlService.start(this);
             }
         }
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        unregisterReceiver(m_downloadReceiver);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        registerReceiver(m_downloadReceiver, m_filter);
     }
 
     @Override
@@ -55,22 +80,54 @@ public class MainStartingActivity extends AppCompatActivity {
 
     @OnClick(R.id.calculator)
     public void openCalculator() {
-        LocalDate lastPredictedDate = Preferences.loadDate(this, Preferences.LAST_PREDICTED_DATE, LocalDate.now());
-        if (LocalDate.now().isAfter(lastPredictedDate.minusDays(1))) {
-            // If today is >= last day of the month, make new calculations for the next month
-            EncogService.start(this); //TODO move this elsewhere
-        }
+        Toast.makeText(this, "Not implemented yet", Toast.LENGTH_SHORT).show();
     }
 
     @OnClick(R.id.past_data)
     public void openPastData() {
+        if (checkIfHasLatestData()) return;
+
         Intent intent = new Intent(this, PastDataActivity.class);
         startActivity(intent);
     }
 
     @OnClick(R.id.predicted_data)
     public void openPredictedData() {
+        if (checkIfHasLatestData()) return;
+
         Intent intent = new Intent(this, PredictedDataActivity.class);
         startActivity(intent);
+    }
+
+    @OnClick(R.id.predicted_hrk)
+    public void openHrkData() {
+        if (checkIfHasLatestData()) return;
+
+        Intent intent = new Intent(this, HrkPredictedActivity.class);
+        startActivity(intent);
+    }
+
+    private boolean checkIfHasLatestData() {
+        if (!Preferences.getLastDownloadDate(getApplicationContext()).equals(LocalDate.now())) {
+            if (!ServiceUtils.isMyServiceRunning(this, DownloadIntentService.SERVICE_PATH)) {
+                m_progressBar.setVisibility(View.VISIBLE);
+                DownloadIntentService.start(this);
+            }
+
+            Toast.makeText(this, R.string.need_latest_data, Toast.LENGTH_SHORT).show();
+            return true;
+        }
+        return false;
+    }
+
+    public class DownloadReceiver extends BroadcastReceiver {
+
+        public static final String ACTION_RESP = "com.example.ivan.konverzijavaluta.DOWNLOAD_SERVICE";
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            m_progressBar.setVisibility(View.INVISIBLE);
+        }
+
     }
 }

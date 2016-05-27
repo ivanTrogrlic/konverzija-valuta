@@ -32,7 +32,7 @@ import timber.log.Timber;
 /**
  * Created by ivan on 5/23/2016.
  */
-public class ConvertCsvToSqlService extends IntentService {
+public class SaveCsvFileToSqlService extends IntentService {
 
     public static final String EXCHANGE_LIST_TEMP     = "exchangelisttemp.csv";
     public static final String EXCHANGE_LIST_REVERSED = "exchangelistreversed.csv";
@@ -44,12 +44,12 @@ public class ConvertCsvToSqlService extends IntentService {
     DrzavaRepository       m_drzavaRepository;
     TecajnaListaRepository m_tecajnaListaRepository;
 
-    public ConvertCsvToSqlService() {
-        super("ConvertCsvToSqlService");
+    public SaveCsvFileToSqlService() {
+        super("SaveCsvFileToSqlService");
     }
 
     public static void start(Context p_context) {
-        Intent msgIntent = new Intent(p_context, ConvertCsvToSqlService.class);
+        Intent msgIntent = new Intent(p_context, SaveCsvFileToSqlService.class);
         p_context.startService(msgIntent);
     }
 

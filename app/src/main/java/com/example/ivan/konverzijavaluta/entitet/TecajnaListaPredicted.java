@@ -13,6 +13,7 @@ public class TecajnaListaPredicted {
     private BigDecimal kupovniTecaj;
     private BigDecimal srednjiTecaj;
     private BigDecimal prodajniTecaj;
+    private boolean    soloPredicted;
 
     public Dan getDan() {
         return dan;
@@ -62,13 +63,22 @@ public class TecajnaListaPredicted {
         srednjiTecaj = p_srednjiTecaj;
     }
 
+    public boolean isSoloPredicted() {
+        return soloPredicted;
+    }
+
+    public void setSoloPredicted(boolean p_soloPredicted) {
+        soloPredicted = p_soloPredicted;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof TecajnaListaPredicted)) return false;
+        if (o == null || getClass() != o.getClass()) return false;
 
         TecajnaListaPredicted that = (TecajnaListaPredicted) o;
 
+        if (soloPredicted != that.soloPredicted) return false;
         if (id != null ? !id.equals(that.id) : that.id != null) return false;
         if (!drzava.equals(that.drzava)) return false;
         if (!dan.equals(that.dan)) return false;
@@ -86,18 +96,20 @@ public class TecajnaListaPredicted {
         result = 31 * result + kupovniTecaj.hashCode();
         result = 31 * result + srednjiTecaj.hashCode();
         result = 31 * result + prodajniTecaj.hashCode();
+        result = 31 * result + (soloPredicted ? 1 : 0);
         return result;
     }
 
     @Override
     public String toString() {
         return "TecajnaListaPredicted{" +
-                "dan=" + dan +
-                ", id=" + id +
+                "id=" + id +
                 ", drzava=" + drzava +
-                ", kupovniTecaj='" + kupovniTecaj + '\'' +
-                ", srednjiTecaj='" + srednjiTecaj + '\'' +
-                ", prodajniTecaj='" + prodajniTecaj + '\'' +
+                ", dan=" + dan +
+                ", kupovniTecaj=" + kupovniTecaj +
+                ", srednjiTecaj=" + srednjiTecaj +
+                ", prodajniTecaj=" + prodajniTecaj +
+                ", soloPredicted=" + soloPredicted +
                 '}';
     }
 }

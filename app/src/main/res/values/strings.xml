@@ -29,8 +29,18 @@
     <string name="exchange_calc">Exchange calculator</string>
     <string name="past_data">Past data</string>
     <string name="predicted_data">Predicted data</string>
+    <string name="hrk_data">Predicted HRK data</string>¸
     <string name="select_date">Select date</string>
     <string name="no_real_data">No real data yet</string>
+    <string name="data_not_predicted">Data not predicted yet, please wait</string>
+    <string name="no_data_for_day">No data for this day yet</string>
+    <string name="title_hrk_data">HRK predicted data</string>
+    <string name="date">Date</string>
+    <string name="value">Value</string>
+    <string name="currency">Currency</string>
+    <string name="predicted">Predicted</string>
+    <string name="real">Real</string>
+    <string name="need_latest_data">Need to fetch the latest data first. You need to be connected to the internet</string>
 
     <string-array name="valute">
         <item>HRK</item>

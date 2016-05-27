@@ -16,6 +16,8 @@ import com.example.ivan.konverzijavaluta.entitet.TecajnaLista;
 import com.example.ivan.konverzijavaluta.entitet.TecajnaListaPredicted;
 import com.example.ivan.konverzijavaluta.entitet.TecajnaListaWrapper;
 
+import java.math.RoundingMode;
+
 import butterknife.ButterKnife;
 import butterknife.InjectView;
 
@@ -63,7 +65,8 @@ public class PredictedDataAdapter extends RecyclerView.Adapter<RecyclerView.View
 
         ViewHolder viewHolder = (ViewHolder) holder;
         viewHolder.m_firstRow.setText(tecajnaListaPredicted.getDrzava().getValuta());
-        viewHolder.m_secondRow.setText(tecajnaListaPredicted.getSrednjiTecaj().toString());
+        viewHolder.m_secondRow.setText(
+                tecajnaListaPredicted.getSrednjiTecaj().setScale(4, RoundingMode.HALF_UP).toString());
 
         if (tecajnaLista == null) {
             viewHolder.m_thirdRow.setText(R.string.no_real_data);

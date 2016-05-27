@@ -15,6 +15,7 @@ import com.example.ivan.konverzijavaluta.repository.DrzavaRepository;
 import com.example.ivan.konverzijavaluta.repository.TecajnaListaPredictedRepository;
 import com.example.ivan.konverzijavaluta.service.DownloadIntentService;
 import com.example.ivan.konverzijavaluta.service.SaveCsvFileToSqlService;
+import com.example.ivan.konverzijavaluta.ui.HrkPredictedActivity;
 import com.example.ivan.konverzijavaluta.util.FileUtils;
 import com.example.ivan.konverzijavaluta.util.Preferences;
 
@@ -53,22 +54,23 @@ import java.util.List;
 import timber.log.Timber;
 
 /**
- * Created by ivan on 5/23/2016.
+ * Created by ivan on 5/27/2016.
  */
-public class EncogService extends IntentService {
+public class EncogHrkService extends IntentService {
 
-    public static final String SERVICE_PATH = "com.example.ivan.konverzijavaluta.encog.EncogService";
+    public static final String SERVICE_PATH = "com.example.ivan.konverzijavaluta.encog.EncogHrkService";
 
-    public static final int    WINDOW_SIZE               = 31;
-    public static final String EXCHANGE_LIST_TRAINING    = "exchangelisttrening.csv";
-    public static final String EXCHANGE_LIST_ACTUAL_TEMP = "exchangelistactualtemp.csv";
+    public static final int    WINDOW_SIZE     = 31; // Days to predict
+    public static final String HRK_TRAINING    = "treninghrk.csv";
+    public static final String HRK_ACTUAL      = "actualhrk.csv";
+    public static final String HRK_ACTUAL_TEMP = "actualhrktemp.csv";
 
-    public EncogService() {
-        super("EncogService");
+    public EncogHrkService() {
+        super("EncogHrkService");
     }
 
     public static void start(Context p_context) {
-        Intent msgIntent = new Intent(p_context, EncogService.class);
+        Intent msgIntent = new Intent(p_context, EncogHrkService.class);
         p_context.startService(msgIntent);
     }
 
@@ -77,18 +79,24 @@ public class EncogService extends IntentService {
         run();
     }
 
+    private void sendBroadcast(String p_response) {
+        Intent broadcastIntent = new Intent();
+        broadcastIntent.setAction(HrkPredictedActivity.EncogHrkReceiver.ACTION_RESP);
+        broadcastIntent.addCategory(Intent.CATEGORY_DEFAULT);
+        broadcastIntent.putExtra(DownloadIntentService.DOWNLOAD_RESPONSE, p_response);
+        sendBroadcast(broadcastIntent);
+    }
+
     private void run() {
         try {
-            if (!Preferences.loadBoolean(getApplicationContext(), Preferences.TRAINING_EXCHANGE_LIST_SAVED, false)) {
-                FileUtils.copyFileToExternalDirectory(getApplicationContext(), EXCHANGE_LIST_TRAINING,
-                                                      EXCHANGE_LIST_TRAINING);
-                Preferences.saveBoolean(getApplicationContext(), Preferences.TRAINING_EXCHANGE_LIST_SAVED, true);
+            if (!Preferences.loadBoolean(getApplicationContext(), Preferences.TRAINING_HRK_SAVED, false)) {
+                FileUtils.copyFileToExternalDirectory(getApplicationContext(), HRK_TRAINING, HRK_TRAINING);
+                Preferences.saveBoolean(getApplicationContext(), Preferences.TRAINING_HRK_SAVED, true);
             }
 
             Pair<MLRegression, NormalizationHelper> pair = trainData();
 
             File actual = getActualExchangeListPredictedLines();
-            if (actual == null) return; //Shouldn't ever happen
 
             predictData(pair.first, pair.second, actual);
 
@@ -96,15 +104,17 @@ public class EncogService extends IntentService {
             actual.delete();
             Encog.getInstance().shutdown();
 
+            sendBroadcast(DownloadIntentService.DOWNLOAD_FINISHED);
         } catch (Exception ex) {
             Timber.e(ex, "Encog failed. " + ex.getMessage());
+            sendBroadcast(DownloadIntentService.DOWNLOAD_FAILED);
         }
 
     }
 
     private Pair<MLRegression, NormalizationHelper> trainData() {
         ErrorCalculation.setMode(ErrorCalculationMode.RMS);
-        String path = getExternalFilesDir(null).getPath() + "/" + EXCHANGE_LIST_TRAINING;
+        String path = getExternalFilesDir(null).getPath() + "/" + HRK_TRAINING;
         File filename = new File(path);
 
         // Define the format of the data file (CSV format)
@@ -119,19 +129,15 @@ public class EncogService extends IntentService {
 
         List<ColumnDefinition> columnDefinitions = new ArrayList<>();
 
-        for (Valute valute : Valute.values()) {
-            ColumnDefinition column = data.defineSourceColumn(valute.name(), ColumnType.continuous);
-            columnDefinitions.add(column);
-            data.getNormHelper().defineMissingHandler(column, new MeanMissingHandler());
-        }
+        ColumnDefinition column = data.defineSourceColumn(Valute.HRK.name(), ColumnType.continuous);
+        columnDefinitions.add(column);
+        data.getNormHelper().defineMissingHandler(column, new MeanMissingHandler());
 
         // Analyze the data, determine the min/max/mean/sd of every column.
         data.analyze();
 
-        for (ColumnDefinition columnDefinition : columnDefinitions) {
-            data.defineInput(columnDefinition);
-            data.defineOutput(columnDefinition);
-        }
+        data.defineInput(column);
+        data.defineOutput(column);
 
         // Create feedforward neural network as the model type.
         // MLMethodFactory.TYPE_FEEDFORWARD.
@@ -152,7 +158,7 @@ public class EncogService extends IntentService {
 
         // Set time series.
         data.setLeadWindowSize(1);
-        data.setLagWindowSize(WINDOW_SIZE);
+        data.setLagWindowSize(WINDOW_SIZE + 1);
 
         // Hold back some data for a final validation.
         // Do not shuffle the data into a random ordering. (never shuffle time series)
@@ -163,9 +169,9 @@ public class EncogService extends IntentService {
         // Choose whatever is the default training type for this model.
         model.selectTrainingType(data);
 
-        // Should user a 5-fold cross-validated train, but it's too slow, instead using 2-fold.
+        // Use a 5-fold cross-validated train.
         // Return the best method found. (never shuffle time series)
-        MLRegression bestMethod = (MLRegression) model.crossvalidate(2, false);
+        MLRegression bestMethod = (MLRegression) model.crossvalidate(5, false);
 
         // Display the training and validation errors.
         Timber.d("Training error: " + model.calculateError(bestMethod, model.getTrainingDataset()));
@@ -183,17 +189,17 @@ public class EncogService extends IntentService {
 
     private void predictData(MLRegression p_bestMethod, NormalizationHelper p_helper, File p_actual) {
         ReadCSV csv = new ReadCSV(p_actual, true, new CSVFormat());
-        String[] line = new String[Valute.values().length];
+        String[] line = new String[1];
 
         // Create a vector to hold each time-slice, as we build them.
         // These will be grouped together into windows.
-        double[] slice = new double[Valute.values().length];
-        VectorWindow window = new VectorWindow(WINDOW_SIZE);
+        double[] slice = new double[1];
+        VectorWindow window = new VectorWindow(WINDOW_SIZE); // Predict 30 days
         MLData input = p_helper.allocateInputVector(WINDOW_SIZE);
 
         LocalDate parsedDate = LocalDate.now();
         while (csv.next()) {
-            addColumnsToArray(csv, line);
+            line[0] = csv.get(1);
             p_helper.normalizeInputVector(line, slice, false);
 
             // enough data to build a full window?
@@ -201,14 +207,16 @@ public class EncogService extends IntentService {
                 window.copyWindow(input.getData(), 0);
                 String date = csv.get(0);
 
+                MLData output = p_bestMethod.compute(input);
+                String predicted = p_helper.denormalizeOutputVectorToString(output)[0];
+
                 if (date.equals("")) continue;
                 parsedDate = LocalDate.parse(date, DateTimeFormat.forPattern(SaveCsvFileToSqlService.DATE_FORMAT));
                 // Save predicted data only from now to the end of the month
                 if (parsedDate.isAfter(LocalDate.now())) {
                     Timber.d(parsedDate.toString());
-                    insertTecajnaListaPredicted(p_bestMethod, p_helper, input, parsedDate);
+                    insertTecajnaListaPredicted(parsedDate, predicted);
                 }
-
             }
 
             // Add the normalized slice to the window. We do this just after
@@ -218,11 +226,10 @@ public class EncogService extends IntentService {
             window.add(slice);
         }
 
-        Preferences.saveDate(getApplicationContext(), Preferences.LAST_PREDICTED_DATE, parsedDate.minusDays(1));
+        Preferences.saveDate(getApplicationContext(), Preferences.LAST_PREDICTED_HRK_DATE, parsedDate.minusDays(1));
     }
 
-    private void insertTecajnaListaPredicted(MLRegression p_bestMethod, NormalizationHelper p_helper, MLData p_input,
-                                             LocalDate p_parsedDate) {
+    private void insertTecajnaListaPredicted(LocalDate p_parsedDate, String p_predicted) {
         ContentResolver resolver = getContentResolver();
         DrzavaRepository drzavaRepository = new DrzavaRepository(resolver);
         DanRepository danRepository = new DanRepository(resolver);
@@ -232,27 +239,18 @@ public class EncogService extends IntentService {
         Dan dan = new Dan();
         dan.setDan(p_parsedDate);
         dan.setId(danRepository.insert(dan));
-        for (int i = 0; i < Valute.values().length; i++) {
-            MLData output = p_bestMethod.compute(p_input);
-            String predicted = p_helper.denormalizeOutputVectorToString(output)[i];
 
-            Drzava drzava = drzavaRepository.getByValuta(Valute.values()[i].name());
+        Drzava drzava = drzavaRepository.getByValuta(Valute.HRK.name());
 
-            TecajnaListaPredicted tecajnaListaPredicted = new TecajnaListaPredicted();
-            tecajnaListaPredicted.setDan(dan);
-            tecajnaListaPredicted.setDrzava(drzava);
-            BigDecimal tecaj = BigDecimal.valueOf(Double.valueOf(predicted));
-            tecajnaListaPredicted.setKupovniTecaj(tecaj);
-            tecajnaListaPredicted.setSrednjiTecaj(tecaj);
-            tecajnaListaPredicted.setProdajniTecaj(tecaj);
-            tecajnaListaPredictedRepository.insert(tecajnaListaPredicted);
-        }
-    }
-
-    private void addColumnsToArray(ReadCSV p_csv, String[] p_line) {
-        for (int i = 1; i <= Valute.values().length; i++) {
-            p_line[i - 1] = p_csv.get(i);
-        }
+        TecajnaListaPredicted tecajnaListaPredicted = new TecajnaListaPredicted();
+        tecajnaListaPredicted.setDan(dan);
+        tecajnaListaPredicted.setDrzava(drzava);
+        BigDecimal tecaj = BigDecimal.valueOf(Double.valueOf(p_predicted));
+        tecajnaListaPredicted.setKupovniTecaj(tecaj);
+        tecajnaListaPredicted.setSrednjiTecaj(tecaj);
+        tecajnaListaPredicted.setProdajniTecaj(tecaj);
+        tecajnaListaPredicted.setSoloPredicted(true);
+        tecajnaListaPredictedRepository.insert(tecajnaListaPredicted);
     }
 
     private File getActualExchangeListPredictedLines() {
@@ -260,8 +258,8 @@ public class EncogService extends IntentService {
         BufferedWriter writer;
         try {
             String externalStoragePath = getExternalFilesDir(null).getPath();
-            String path = externalStoragePath + "/" + EXCHANGE_LIST_ACTUAL_TEMP;
-            String pathActual = externalStoragePath + "/" + DownloadIntentService.EXCHANGE_LIST_ACTUAL;
+            String path = externalStoragePath + "/" + HRK_ACTUAL_TEMP;
+            String pathActual = externalStoragePath + "/" + HRK_ACTUAL;
             File tempFile = new File(path);
             File actualFile = new File(pathActual);
 
@@ -274,9 +272,23 @@ public class EncogService extends IntentService {
 
             StringBuilder sb = new StringBuilder();
             String line;
+            String lastLine = "";
 
             while ((line = reader.readLine()) != null) {
                 sb.append(line).append("\n");
+                lastLine = line;
+            }
+
+            String date = lastLine.substring(0, lastLine.indexOf(","));
+            LocalDate parsedDate = LocalDate.parse(date,
+                                                   DateTimeFormat.forPattern(SaveCsvFileToSqlService.DATE_FORMAT));
+            StringBuilder predictedLine = new StringBuilder(lastLine);
+
+            // Add 31 more lines to the file, with new dates, which will be used as predicted
+            for (int i = 0; i < 31; i++) {
+                predictedLine.replace(0, predictedLine.indexOf(","), parsedDate.plusDays(i + 1).toString(
+                        SaveCsvFileToSqlService.DATE_FORMAT));
+                sb.append(predictedLine).append("\n");
             }
 
             String result = sb.toString();
@@ -290,4 +302,5 @@ public class EncogService extends IntentService {
             return null;
         }
     }
+
 }

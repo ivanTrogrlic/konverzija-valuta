@@ -5,11 +5,12 @@ import android.content.Context;
 import android.content.Intent;
 import android.support.annotation.NonNull;
 
+import com.example.ivan.konverzijavaluta.encog.EncogHrkService;
 import com.example.ivan.konverzijavaluta.entitet.Dan;
 import com.example.ivan.konverzijavaluta.entitet.Drzava;
 import com.example.ivan.konverzijavaluta.entitet.TecajnaLista;
 import com.example.ivan.konverzijavaluta.entitet.Valute;
-import com.example.ivan.konverzijavaluta.main.DateChooseFragment;
+import com.example.ivan.konverzijavaluta.main.MainStartingActivity;
 import com.example.ivan.konverzijavaluta.repository.DanRepository;
 import com.example.ivan.konverzijavaluta.repository.DrzavaRepository;
 import com.example.ivan.konverzijavaluta.repository.TecajnaListaRepository;
@@ -38,6 +39,8 @@ import retrofit2.Callback;
 import timber.log.Timber;
 
 public class DownloadIntentService extends IntentService {
+
+    public static final String SERVICE_PATH = "com.example.ivan.konverzijavaluta.service.DownloadIntentService";
 
     public static final String COLUMN_TIME_PERIOD   = "TIME_PERIOD";
     public static final String COLUMN_OBS_VALUE     = "OBS_VALUE";
@@ -107,7 +110,7 @@ public class DownloadIntentService extends IntentService {
 
     private void sendDownloadResponse(String p_response) {
         Intent broadcastIntent = new Intent();
-        broadcastIntent.setAction(DateChooseFragment.ResponseReceiver.ACTION_RESP);
+        broadcastIntent.setAction(MainStartingActivity.DownloadReceiver.ACTION_RESP);
         broadcastIntent.addCategory(Intent.CATEGORY_DEFAULT);
         broadcastIntent.putExtra(DOWNLOAD_RESPONSE, p_response);
         sendBroadcast(broadcastIntent);
@@ -141,8 +144,8 @@ public class DownloadIntentService extends IntentService {
         }
 
         appendResponseToCsv();
-        Preferences.saveDate(getApplicationContext(), Preferences.LAST_DOWNLOADED_EXCHANGE_LIST,
-                             LocalDate.now());
+        appendResponseToHrkCsv();
+        Preferences.saveDate(getApplicationContext(), Preferences.LAST_DOWNLOADED_EXCHANGE_LIST, LocalDate.now());
         file.delete();
     }
 
@@ -201,19 +204,19 @@ public class DownloadIntentService extends IntentService {
         Dan dan = m_danRepository.getByDate(p_currentDate);
         if (dan == null) return p_currentDate.plusDays(1); // No exchange list available for today yet
 
-        p_sb.append(p_currentDate.toString(ConvertCsvToSqlService.DATE_FORMAT)).append(",");
+        p_sb.append(p_currentDate.toString(SaveCsvFileToSqlService.DATE_FORMAT)).append(",");
         for (int i = 0; i < Valute.values().length; i++) {
             Valute valuta = Valute.values()[i];
 
             Drzava drzava = m_drzavaRepository.getByValuta(valuta.name());
             if (drzava == null) {
-                p_sb.append(ConvertCsvToSqlService.MISSING_VALUE).append(",");
+                p_sb.append(SaveCsvFileToSqlService.MISSING_VALUE).append(",");
                 continue;
             }
 
             TecajnaLista tecajnaLista = m_tecajnaListaRepository.getByDanAndDrzava(dan.getId(), drzava.getId());
             if (tecajnaLista == null) {
-                p_sb.append(ConvertCsvToSqlService.MISSING_VALUE).append(",");
+                p_sb.append(SaveCsvFileToSqlService.MISSING_VALUE).append(",");
                 continue;
             }
             p_sb.append(tecajnaLista.getSrednjiTecaj());
@@ -223,6 +226,48 @@ public class DownloadIntentService extends IntentService {
 
         p_sb.append("\n");
         return p_currentDate.plusDays(1);
+    }
+
+    private void appendResponseToHrkCsv() throws IOException {
+        if (!Preferences.loadBoolean(getApplicationContext(), Preferences.INITIAL_HRK_SAVED, false)) {
+            FileUtils.copyFileToExternalDirectory(getApplicationContext(), EncogHrkService.HRK_ACTUAL,
+                                                  EncogHrkService.HRK_ACTUAL);
+            Preferences.saveBoolean(getApplicationContext(), Preferences.INITIAL_HRK_SAVED, true);
+        }
+
+        String path = getExternalFilesDir(null).getPath() + "/" + EncogHrkService.HRK_ACTUAL;
+        BufferedWriter writer = new BufferedWriter(new FileWriter(path, true));
+
+        LocalDate currentDate = Preferences.getLastDownloadDate(getApplicationContext());
+        StringBuilder sb = new StringBuilder();
+        while (currentDate.isBefore(LocalDate.now().plusDays(1))) {
+            Dan dan = m_danRepository.getByDate(currentDate);
+            if (dan == null) {
+                currentDate = currentDate.plusDays(1); // No exchange list available for today yet
+                continue;
+            }
+
+            sb.append(currentDate.toString(SaveCsvFileToSqlService.DATE_FORMAT)).append(",");
+
+            Drzava drzava = m_drzavaRepository.getByValuta(Valute.HRK.name());
+            if (drzava == null) {
+                sb.append(SaveCsvFileToSqlService.MISSING_VALUE);
+                continue;
+            }
+
+            TecajnaLista tecajnaLista = m_tecajnaListaRepository.getByDanAndDrzava(dan.getId(), drzava.getId());
+            if (tecajnaLista == null) {
+                sb.append(SaveCsvFileToSqlService.MISSING_VALUE);
+                continue;
+            }
+
+            sb.append(tecajnaLista.getSrednjiTecaj()).append("\n");
+            currentDate = currentDate.plusDays(1);
+        }
+
+        String result = sb.toString();
+        writer.write(result);
+        writer.close();
     }
 
     private void insertTecajnaLista(String p_value, Dan p_dan, Drzava p_drzava) {

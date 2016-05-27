@@ -7,6 +7,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 import com.example.ivan.konverzijavaluta.database.KonverzijaContract.Dan;
 import com.example.ivan.konverzijavaluta.database.KonverzijaContract.Drzava;
 import com.example.ivan.konverzijavaluta.database.KonverzijaContract.TecajnaLista;
+import com.example.ivan.konverzijavaluta.database.KonverzijaContract.TecajnaListaPredicted;
 import com.example.ivan.konverzijavaluta.util.DbUtils;
 
 
@@ -77,12 +78,13 @@ public class KonverzijaDatabase extends SQLiteOpenHelper {
 
     private void createTecajnaListaPredictedTable(SQLiteDatabase p_db) {
         p_db.execSQL("CREATE TABLE " + Tables.TECAJNA_LISTA_PREDCITED + " ("
-                             + TecajnaLista._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
-                             + TecajnaLista.DRZAVA_ID + " INTEGER NOT NULL, "
-                             + TecajnaLista.DAN_ID + " INTEGER NOT NULL, "
-                             + TecajnaLista.KUPOVNI_TECAJ + " TEXT NOT NULL, "
-                             + TecajnaLista.SREDNJI_TECAJ + " TEXT NOT NULL, "
-                             + TecajnaLista.PRODAJNI_TECAJ + " TEXT NOT NULL,"
+                             + TecajnaListaPredicted._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
+                             + TecajnaListaPredicted.DRZAVA_ID + " INTEGER NOT NULL, "
+                             + TecajnaListaPredicted.DAN_ID + " INTEGER NOT NULL, "
+                             + TecajnaListaPredicted.KUPOVNI_TECAJ + " TEXT NOT NULL, "
+                             + TecajnaListaPredicted.SREDNJI_TECAJ + " TEXT NOT NULL, "
+                             + TecajnaListaPredicted.PRODAJNI_TECAJ + " TEXT NOT NULL,"
+                             + TecajnaListaPredicted.SOLO_PREDICTED + " INTEGER NOT NULL,"
                              // Foreign keys
                              + DbUtils.dbCreateForeignKey(TecajnaLista.DRZAVA_ID, Tables.DRZAVA, Drzava._ID)
                              + DbUtils.dbCreateForeignKey(TecajnaLista.DAN_ID, Tables.DAN, Dan.DAN)

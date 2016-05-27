@@ -51,6 +51,7 @@ public class TecajnaListaPredictedCursor extends AbstractCursor {
         tecajnaListaPredicted.setKupovniTecaj(getBigDecimal(KonverzijaContract.TecajnaListaPredicted.KUPOVNI_TECAJ));
         tecajnaListaPredicted.setSrednjiTecaj(getBigDecimal(KonverzijaContract.TecajnaListaPredicted.SREDNJI_TECAJ));
         tecajnaListaPredicted.setProdajniTecaj(getBigDecimal(KonverzijaContract.TecajnaListaPredicted.PRODAJNI_TECAJ));
+        tecajnaListaPredicted.setSoloPredicted(getInt(KonverzijaContract.TecajnaListaPredicted.SOLO_PREDICTED) == 1);
 
         return tecajnaListaPredicted;
     }

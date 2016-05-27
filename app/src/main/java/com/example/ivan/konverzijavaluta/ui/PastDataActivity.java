@@ -9,6 +9,7 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.widget.DatePicker;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.ivan.konverzijavaluta.R;
 import com.example.ivan.konverzijavaluta.entitet.Dan;
@@ -30,8 +31,11 @@ import butterknife.OnClick;
  */
 public class PastDataActivity extends AppCompatActivity {
 
-    @InjectView(R.id.list) RecyclerView m_list;
-    @InjectView(R.id.date) TextView     m_date;
+    @InjectView(R.id.list)    RecyclerView m_list;
+    @InjectView(R.id.date)    TextView     m_date;
+    @InjectView(R.id.header1) TextView     m_header1;
+    @InjectView(R.id.header2) TextView     m_header2;
+    @InjectView(R.id.header3) TextView     m_header3;
 
     private PastDataAdapter        m_pastDataAdapter;
     private DanRepository          m_danRepository;
@@ -49,6 +53,7 @@ public class PastDataActivity extends AppCompatActivity {
         ButterKnife.inject(this);
         initRepositories();
         initAdapter();
+        setHeader();
     }
 
     @Override
@@ -64,6 +69,12 @@ public class PastDataActivity extends AppCompatActivity {
         } else {
             super.onBackPressed();
         }
+    }
+
+    private void setHeader() {
+        m_header1.setText(R.string.date);
+        m_header2.setText(R.string.currency);
+        m_header3.setText(R.string.value);
     }
 
     private void initAdapter() {
@@ -88,7 +99,7 @@ public class PastDataActivity extends AppCompatActivity {
                 setListData(date);
                 m_date.setText(date.toString());
             }
-        }, now.getYear(), now.getMonthOfYear(), now.getDayOfMonth());
+        }, now.getYear(), now.getMonthOfYear() - 1, now.getDayOfMonth());
         datePickerDialog.getDatePicker().setMaxDate(now.toDate().getTime());
         datePickerDialog.show();
     }
@@ -96,6 +107,10 @@ public class PastDataActivity extends AppCompatActivity {
     private void setListData(LocalDate p_date) {
         m_pastDataAdapter.clear();
         Dan dan = m_danRepository.getByDate(p_date);
+        if (dan == null) {
+            Toast.makeText(this, R.string.no_data_for_day, Toast.LENGTH_SHORT).show();
+            return;
+        }
         List<TecajnaLista> tecajnaLista = m_tecajnaListaRepository.getByDan(dan.getId());
         m_pastDataAdapter.setItems(tecajnaLista);
         m_pastDataAdapter.notifyDataSetChanged();

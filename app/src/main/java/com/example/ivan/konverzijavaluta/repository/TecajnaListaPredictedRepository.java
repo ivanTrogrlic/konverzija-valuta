@@ -15,6 +15,8 @@ import com.example.ivan.konverzijavaluta.database.KonverzijaDatabase.Tables;
 import com.example.ivan.konverzijavaluta.entitet.TecajnaListaPredicted;
 import com.example.ivan.konverzijavaluta.util.DbUtils;
 
+import org.joda.time.LocalDate;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -44,10 +46,10 @@ public class TecajnaListaPredictedRepository {
     /**
      * Returns TecajnaListaPredicted for given Drzava ID, or null if it doesn't exists.
      */
-    public List<TecajnaListaPredicted> getByDrzava(long p_drzavaId) {
+    public List<TecajnaListaPredicted> getByDrzava(long p_drzavaId, boolean p_soloPredicted) {
         String[] projection = getProjection();
-        String whereClause = KonverzijaContract.TecajnaListaPredicted.DRZAVA_ID + "=?";
-        String[] whereArgs = {String.valueOf(p_drzavaId)};
+        String whereClause = KonverzijaContract.TecajnaListaPredicted.DRZAVA_ID + "=? AND " + KonverzijaContract.TecajnaListaPredicted.SOLO_PREDICTED + "=?";
+        String[] whereArgs = {String.valueOf(p_drzavaId), String.valueOf(p_soloPredicted ? 1 : 0)};
 
         return query(projection, whereClause, whereArgs);
     }
@@ -55,10 +57,10 @@ public class TecajnaListaPredictedRepository {
     /**
      * Returns TecajnaListaPredicted for given Dan ID, or null if it doesn't exists.
      */
-    public List<TecajnaListaPredicted> getByDan(long p_danId) {
+    public List<TecajnaListaPredicted> getByDan(long p_danId, boolean p_soloPredicted) {
         String[] projection = getProjection();
-        String whereClause = KonverzijaContract.TecajnaListaPredicted.DAN_ID + "=?";
-        String[] whereArgs = {String.valueOf(p_danId)};
+        String whereClause = KonverzijaContract.TecajnaListaPredicted.DAN_ID + "=? AND " + KonverzijaContract.TecajnaListaPredicted.SOLO_PREDICTED + "=?";
+        String[] whereArgs = {String.valueOf(p_danId), String.valueOf(p_soloPredicted ? 1 : 0)};
 
         return query(projection, whereClause, whereArgs);
     }
@@ -66,10 +68,11 @@ public class TecajnaListaPredictedRepository {
     /**
      * Returns TecajnaListaPredicted for given Dan ID and Drzava ID, or null if it doesn't exists.
      */
-    public TecajnaListaPredicted getByDanAndDrzava(long p_danId, long p_drzavaId) {
+    public TecajnaListaPredicted getByDanAndDrzava(long p_danId, long p_drzavaId, boolean p_soloPredicted) {
         String[] projection = getProjection();
-        String whereClause = KonverzijaContract.TecajnaListaPredicted.DAN_ID + "=? AND " + KonverzijaContract.TecajnaListaPredicted.DRZAVA_ID + "=?";
-        String[] whereArgs = {String.valueOf(p_danId), String.valueOf(p_drzavaId)};
+        String whereClause = KonverzijaContract.TecajnaListaPredicted.DAN_ID + "=? AND " + KonverzijaContract.TecajnaListaPredicted.DRZAVA_ID + "=? AND " + KonverzijaContract.TecajnaListaPredicted.SOLO_PREDICTED + "=?";
+        String[] whereArgs = {String.valueOf(p_danId), String.valueOf(p_drzavaId),
+                String.valueOf(p_soloPredicted ? 1 : 0)};
 
         List<TecajnaListaPredicted> list = query(projection, whereClause, whereArgs);
         return list == null || list.isEmpty() ? null : list.get(0);
@@ -89,6 +92,8 @@ public class TecajnaListaPredictedRepository {
                    DbUtils.toDbBigDecimal(p_tecajnaListaPredicted.getSrednjiTecaj()));
         values.put(KonverzijaContract.TecajnaListaPredicted.PRODAJNI_TECAJ,
                    DbUtils.toDbBigDecimal(p_tecajnaListaPredicted.getProdajniTecaj()));
+        values.put(KonverzijaContract.TecajnaListaPredicted.SOLO_PREDICTED,
+                   p_tecajnaListaPredicted.isSoloPredicted() ? 1 : 0);
         Uri uri = m_contentResolver.insert(KonverzijaContract.TecajnaListaPredicted.CONTENT_URI, values);
         return KonverzijaContract.getId(uri);
     }
@@ -108,6 +113,7 @@ public class TecajnaListaPredictedRepository {
         return new String[]{KonverzijaContract.TecajnaListaPredicted._ID, KonverzijaContract.TecajnaListaPredicted.DAN_ID,
                 KonverzijaContract.TecajnaListaPredicted.DRZAVA_ID, KonverzijaContract.TecajnaListaPredicted.KUPOVNI_TECAJ,
                 KonverzijaContract.TecajnaListaPredicted.SREDNJI_TECAJ, KonverzijaContract.TecajnaListaPredicted.PRODAJNI_TECAJ,
+                KonverzijaContract.TecajnaListaPredicted.SOLO_PREDICTED,
                 Tables.DAN + "$" + Dan._ID, Tables.DAN + "$" + Dan.DAN,
                 Tables.DRZAVA + "$" + Drzava._ID, Tables.DRZAVA + "$" + Drzava.JEDINICA, Tables.DRZAVA + "$" + Drzava.SIFRA, Tables.DRZAVA + "$" + Drzava.VALUTA};
     }

@@ -15,6 +15,8 @@ import com.example.ivan.konverzijavaluta.database.KonverzijaDatabase.Tables;
 import com.example.ivan.konverzijavaluta.entitet.TecajnaLista;
 import com.example.ivan.konverzijavaluta.util.DbUtils;
 
+import org.joda.time.LocalDate;
+
 import java.util.ArrayList;
 import java.util.List;
 
