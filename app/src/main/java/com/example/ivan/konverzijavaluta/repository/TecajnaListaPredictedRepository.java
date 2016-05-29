@@ -13,6 +13,7 @@ import com.example.ivan.konverzijavaluta.database.KonverzijaContract.Dan;
 import com.example.ivan.konverzijavaluta.database.KonverzijaContract.Drzava;
 import com.example.ivan.konverzijavaluta.database.KonverzijaDatabase.Tables;
 import com.example.ivan.konverzijavaluta.entitet.TecajnaListaPredicted;
+import com.example.ivan.konverzijavaluta.service.DownloadIntentService;
 import com.example.ivan.konverzijavaluta.util.DbUtils;
 
 import org.joda.time.LocalDate;
@@ -39,7 +40,7 @@ public class TecajnaListaPredictedRepository {
         String whereClause = KonverzijaContract.TecajnaListaPredicted._ID + "=?";
         String[] whereArgs = {String.valueOf(p_id)};
 
-        List<TecajnaListaPredicted> list = query(projection, whereClause, whereArgs);
+        List<TecajnaListaPredicted> list = query(projection, whereClause, whereArgs, null);
         return list == null || list.isEmpty() ? null : list.get(0);
     }
 
@@ -51,30 +52,66 @@ public class TecajnaListaPredictedRepository {
         String whereClause = KonverzijaContract.TecajnaListaPredicted.DRZAVA_ID + "=? AND " + KonverzijaContract.TecajnaListaPredicted.SOLO_PREDICTED + "=?";
         String[] whereArgs = {String.valueOf(p_drzavaId), String.valueOf(p_soloPredicted ? 1 : 0)};
 
-        return query(projection, whereClause, whereArgs);
+        return query(projection, whereClause, whereArgs, null);
     }
 
     /**
      * Returns TecajnaListaPredicted for given Dan ID, or null if it doesn't exists.
      */
-    public List<TecajnaListaPredicted> getByDan(long p_danId, boolean p_soloPredicted) {
+    public List<TecajnaListaPredicted> getByDan(long p_danId) {
         String[] projection = getProjection();
-        String whereClause = KonverzijaContract.TecajnaListaPredicted.DAN_ID + "=? AND " + KonverzijaContract.TecajnaListaPredicted.SOLO_PREDICTED + "=?";
-        String[] whereArgs = {String.valueOf(p_danId), String.valueOf(p_soloPredicted ? 1 : 0)};
+        String whereClause = KonverzijaContract.TecajnaListaPredicted.DAN_ID + "=?";
+        String[] whereArgs = {String.valueOf(p_danId)};
 
-        return query(projection, whereClause, whereArgs);
+        return query(projection, whereClause, whereArgs, null);
     }
 
     /**
      * Returns TecajnaListaPredicted for given Dan ID and Drzava ID, or null if it doesn't exists.
      */
-    public TecajnaListaPredicted getByDanAndDrzava(long p_danId, long p_drzavaId, boolean p_soloPredicted) {
+    public TecajnaListaPredicted getByDanAndDrzava(long p_danId, long p_drzavaId) {
         String[] projection = getProjection();
-        String whereClause = KonverzijaContract.TecajnaListaPredicted.DAN_ID + "=? AND " + KonverzijaContract.TecajnaListaPredicted.DRZAVA_ID + "=? AND " + KonverzijaContract.TecajnaListaPredicted.SOLO_PREDICTED + "=?";
-        String[] whereArgs = {String.valueOf(p_danId), String.valueOf(p_drzavaId),
-                String.valueOf(p_soloPredicted ? 1 : 0)};
+        String whereClause = KonverzijaContract.TecajnaListaPredicted.DAN_ID + "=? AND " + KonverzijaContract.TecajnaListaPredicted.DRZAVA_ID + "=?";
+        String[] whereArgs = {String.valueOf(p_danId), String.valueOf(p_drzavaId)};
 
-        List<TecajnaListaPredicted> list = query(projection, whereClause, whereArgs);
+        List<TecajnaListaPredicted> list = query(projection, whereClause, whereArgs, null);
+        return list == null || list.isEmpty() ? null : list.get(0);
+    }
+
+    /**
+     * Returns TecajnaListaPredicted where Dan is between p_from and p_to including.
+     */
+    public List<TecajnaListaPredicted> getFromTo(LocalDate p_from, LocalDate p_to) {
+        String[] projection = getProjection();
+        String whereClause = Tables.DAN + "." + Dan.DAN + ">=? AND " + Tables.DAN + "." + Dan.DAN + "<=?";
+        String[] whereArgs = {p_from.toString(DownloadIntentService.DATE_FORMAT_SQLITE), p_to.toString(
+                DownloadIntentService.DATE_FORMAT_SQLITE)};
+
+        return query(projection, whereClause, whereArgs, null);
+    }
+
+    /**
+     * Returns TecajnaListaPredicted where Dan is between p_from and p_to including, and by drzava id.
+     */
+    public List<TecajnaListaPredicted> getFromToByDrzava(LocalDate p_from, LocalDate p_to, long p_drzavaId) {
+        String[] projection = getProjection();
+        String whereClause = Tables.DAN + "." + Dan.DAN + ">=? AND " + Tables.DAN + "." + Dan.DAN + "<=? AND " + KonverzijaContract.TecajnaListaPredicted.DRZAVA_ID + "=?";
+        String[] whereArgs = {p_from.toString(DownloadIntentService.DATE_FORMAT_SQLITE), p_to.toString(
+                DownloadIntentService.DATE_FORMAT_SQLITE), String.valueOf(p_drzavaId)};
+
+        return query(projection, whereClause, whereArgs, null);
+    }
+
+    /**
+     * Returns TecajnaListaPredicted where Dan is between p_from and p_to including, and by drzava id.
+     */
+    public TecajnaListaPredicted getLastByDrzava(long p_drzavaId) {
+        String[] projection = getProjection();
+        String whereClause = KonverzijaContract.TecajnaListaPredicted.DRZAVA_ID + "=?";
+        String[] whereArgs = {String.valueOf(p_drzavaId)};
+        String orderBy = Tables.DAN + "." + Dan.DAN + " DESC";
+
+        List<TecajnaListaPredicted> list = query(projection, whereClause, whereArgs, orderBy);
         return list == null || list.isEmpty() ? null : list.get(0);
     }
 
@@ -119,12 +156,13 @@ public class TecajnaListaPredictedRepository {
     }
 
     @Nullable
-    private List<TecajnaListaPredicted> query(String[] p_projection, String p_whereClause, String[] p_whereArgs) {
+    private List<TecajnaListaPredicted> query(String[] p_projection, String p_whereClause, String[] p_whereArgs,
+                                              String p_orderBy) {
         Uri uri = KonverzijaContract.TecajnaListaPredicted.CONTENT_URI
                 .buildUpon()
                 .appendPath(KonverzijaContract.PATH_WITH_DAN_AND_DRZAVA)
                 .build();
-        Cursor cursor = m_contentResolver.query(uri, p_projection, p_whereClause, p_whereArgs, null);
+        Cursor cursor = m_contentResolver.query(uri, p_projection, p_whereClause, p_whereArgs, p_orderBy);
         if (cursor == null) {
             return null;
         }

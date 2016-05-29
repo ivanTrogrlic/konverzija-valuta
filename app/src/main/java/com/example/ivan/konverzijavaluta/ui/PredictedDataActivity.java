@@ -17,7 +17,7 @@ import android.widget.TextView;
 
 import com.example.ivan.konverzijavaluta.R;
 import com.example.ivan.konverzijavaluta.encog.EncogService;
-import com.example.ivan.konverzijavaluta.entitet.Dan;
+import com.example.ivan.konverzijavaluta.entitet.Drzava;
 import com.example.ivan.konverzijavaluta.entitet.TecajnaLista;
 import com.example.ivan.konverzijavaluta.entitet.TecajnaListaPredicted;
 import com.example.ivan.konverzijavaluta.entitet.TecajnaListaWrapper;
@@ -55,7 +55,7 @@ public class PredictedDataActivity extends AppCompatActivity {
     private DrzavaRepository                m_drzavaRepository;
     private TecajnaListaRepository          m_tecajnaListaRepository;
     private TecajnaListaPredictedRepository m_tecajnaListaPredictedRepository;
-    private LocalDate                       m_lastPredictedDate;
+    private String                          m_selectedValuta;
 
     private EncogReceiver m_receiver;
     private IntentFilter  m_filter;
@@ -138,18 +138,34 @@ public class PredictedDataActivity extends AppCompatActivity {
         ArrayAdapter<String> dataAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, list);
         dataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         m_spinner.setAdapter(dataAdapter);
+        m_selectedValuta = String.valueOf(m_spinner.getSelectedItem());
     }
 
     @OnClick(R.id.predict)
     public void predict() {
-        String valuta = String.valueOf(m_spinner.getSelectedItem());
-        m_currency.setText(valuta);
-//        LocalDate lastPredictedDate = Preferences.loadDate(this, Preferences.LAST_PREDICTED_DATE, LocalDate.now());
-//        if (LocalDate.now().isAfter(lastPredictedDate.minusDays(1))) {
-        // If today is >= last day of the month, make new calculations for the next month
-        //TODO check if today is before last predicted date for selected value, if it is, dont start service, just query predict data for the last month
-        startServiceIfNotRunning(valuta);
-//        }
+        m_selectedValuta = String.valueOf(m_spinner.getSelectedItem());
+        m_currency.setText(m_selectedValuta);
+        predictOrJustShowPredictedData(m_selectedValuta);
+    }
+
+    private void predictOrJustShowPredictedData(String p_valuta) {
+        LocalDate lastPredictedDate = getLatestPredictionForDrzava(p_valuta);
+
+        if (lastPredictedDate == null || LocalDate.now().isAfter(lastPredictedDate.minusDays(1))) {
+            // If today is >= last day of the month, make new calculations for the next month
+            startServiceIfNotRunning(p_valuta);
+            return;
+        }
+
+        TecajnaListaWrapper tecajnaListaWrapper = loadDataForPeriod(lastPredictedDate.minusDays(31), lastPredictedDate);
+        setListData(tecajnaListaWrapper);
+    }
+
+    private LocalDate getLatestPredictionForDrzava(String p_valuta) {
+        Drzava drzava = m_drzavaRepository.getByValuta(p_valuta);
+        TecajnaListaPredicted lastPredictedTecajna = m_tecajnaListaPredictedRepository.getLastByDrzava(drzava.getId());
+        if (lastPredictedTecajna == null) return null;
+        return lastPredictedTecajna.getDan().getDan();
     }
 
     private void startServiceIfNotRunning(String p_valuta) {
@@ -159,18 +175,22 @@ public class PredictedDataActivity extends AppCompatActivity {
         }
     }
 
-    private void setListData(LocalDate p_date) {
+    private void setListData(TecajnaListaWrapper p_listaWrapper) {
         m_adapter.clear();
-        Dan dan = m_danRepository.getByDate(p_date);
-        List<TecajnaLista> tecajnaLista = m_tecajnaListaRepository.getByDan(dan.getId());
-        List<TecajnaListaPredicted> tecajnaListaPredicted = m_tecajnaListaPredictedRepository.getByDan(dan.getId(),
-                                                                                                       false);
+        m_adapter.setItems(p_listaWrapper);
+        m_adapter.notifyDataSetChanged();
+    }
+
+    private TecajnaListaWrapper loadDataForPeriod(LocalDate p_from, LocalDate p_to) {
+        Drzava drzava = m_drzavaRepository.getByValuta(m_selectedValuta);
+        Long drzavaId = drzava.getId();
+        List<TecajnaLista> tecajnaLista = m_tecajnaListaRepository.getFromToByDrzava(p_from, p_to, drzavaId);
+        List<TecajnaListaPredicted> listaPredicted = m_tecajnaListaPredictedRepository.getFromToByDrzava(p_from, p_to,
+                                                                                                         drzavaId);
         TecajnaListaWrapper tecajnaListaWrapper = new TecajnaListaWrapper();
         tecajnaListaWrapper.setTecajnaLista(tecajnaLista);
-        tecajnaListaWrapper.setTecajnaListaPredicted(tecajnaListaPredicted);
-
-        m_adapter.setItems(tecajnaListaWrapper);
-        m_adapter.notifyDataSetChanged();
+        tecajnaListaWrapper.setTecajnaListaPredicted(listaPredicted);
+        return tecajnaListaWrapper;
     }
 
     public class EncogReceiver extends BroadcastReceiver {
@@ -180,7 +200,9 @@ public class PredictedDataActivity extends AppCompatActivity {
         @Override
         public void onReceive(Context context, Intent intent) {
             m_progressBar.setVisibility(View.INVISIBLE);
-            setListData(LocalDate.now().plusDays(1));
+            LocalDate lastPredictedDate = getLatestPredictionForDrzava(m_selectedValuta);
+            TecajnaListaWrapper wrapper = loadDataForPeriod(lastPredictedDate.minusDays(31), lastPredictedDate);
+            setListData(wrapper);
         }
 
     }

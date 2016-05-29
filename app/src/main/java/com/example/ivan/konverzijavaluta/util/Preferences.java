@@ -15,12 +15,7 @@ import org.joda.time.format.DateTimeFormat;
 public class Preferences {
 
     public static final String LAST_DOWNLOADED_EXCHANGE_LIST = "last_downloaded_exchange_list";
-    public static final String LAST_PREDICTED_DATE           = "last_predicted_date";
-    public static final String LAST_PREDICTED_HRK_DATE       = "last_predicted_hrk_date";
     public static final String INITIAL_EXCHANGE_LIST_SAVED   = "initial_exchange_list_saved";
-    public static final String INITIAL_HRK_SAVED             = "initial_hrk_saved";
-    public static final String TRAINING_EXCHANGE_LIST_SAVED  = "training_exchange_list_saved";
-    public static final String TRAINING_HRK_SAVED            = "training_hrk_saved";
     public static final String CONVERTED_CSV_TO_SQL          = "converted_csv_to_sql";
 
     public static void saveDate(Context p_context, String p_key, LocalDate p_date) {
@@ -50,7 +45,7 @@ public class Preferences {
 
     public static LocalDate getLastDownloadDate(Context p_context) {
         LocalDate defaultDate = LocalDate.parse(DownloadIntentService.DEFAULT_DATE,
-                                                DateTimeFormat.forPattern(DownloadIntentService.DATE_FORMAT));
+                                                DateTimeFormat.forPattern(DownloadIntentService.DATE_FORMAT_SQLITE));
         return Preferences.loadDate(p_context, Preferences.LAST_DOWNLOADED_EXCHANGE_LIST, defaultDate);
     }
 

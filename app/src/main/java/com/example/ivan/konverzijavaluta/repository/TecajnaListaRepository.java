@@ -13,6 +13,7 @@ import com.example.ivan.konverzijavaluta.database.KonverzijaContract.Dan;
 import com.example.ivan.konverzijavaluta.database.KonverzijaContract.Drzava;
 import com.example.ivan.konverzijavaluta.database.KonverzijaDatabase.Tables;
 import com.example.ivan.konverzijavaluta.entitet.TecajnaLista;
+import com.example.ivan.konverzijavaluta.service.DownloadIntentService;
 import com.example.ivan.konverzijavaluta.util.DbUtils;
 
 import org.joda.time.LocalDate;
@@ -79,6 +80,30 @@ public class TecajnaListaRepository {
 
         List<TecajnaLista> list = query(projection, whereClause, whereArgs);
         return list == null || list.isEmpty() ? null : list.get(0);
+    }
+
+    /**
+     * Returns TecajnaLista where Dan is between p_from and p_to including.
+     */
+    public List<TecajnaLista> getFromTo(LocalDate p_from, LocalDate p_to) {
+        String[] projection = getProjection();
+        String whereClause = Tables.TECAJNA_LISTA + "." + Dan.DAN + ">=? AND " + Tables.TECAJNA_LISTA + "." + Dan.DAN + "<=?";
+        String[] whereArgs = {p_from.toString(DownloadIntentService.DATE_FORMAT_SQLITE), p_to.toString(
+                DownloadIntentService.DATE_FORMAT_SQLITE)};
+
+        return query(projection, whereClause, whereArgs);
+    }
+
+    /**
+     * Returns TecajnaLista where Dan is between p_from and p_to including, and by drzava id.
+     */
+    public List<TecajnaLista> getFromToByDrzava(LocalDate p_from, LocalDate p_to, long p_drzavaId) {
+        String[] projection = getProjection();
+        String whereClause = Tables.DAN + "." + Dan.DAN + ">=? AND " + Tables.DAN + "." + Dan.DAN + "<=? AND " + KonverzijaContract.TecajnaLista.DRZAVA_ID + "=?";
+        String[] whereArgs = {p_from.toString(DownloadIntentService.DATE_FORMAT_SQLITE), p_to.toString(
+                DownloadIntentService.DATE_FORMAT_SQLITE), String.valueOf(p_drzavaId)};
+
+        return query(projection, whereClause, whereArgs);
     }
 
     /**

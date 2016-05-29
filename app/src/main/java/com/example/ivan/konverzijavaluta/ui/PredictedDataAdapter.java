@@ -60,7 +60,12 @@ public class PredictedDataAdapter extends RecyclerView.Adapter<RecyclerView.View
         TecajnaListaPredicted tecajnaListaPredicted = m_items.getTecajnaListaPredicted().get(position);
         TecajnaLista tecajnaLista = null;
         if (!m_items.getTecajnaLista().isEmpty()) {
-            tecajnaLista = m_items.getTecajnaLista().get(position);
+            for (TecajnaLista lista : m_items.getTecajnaLista()) {
+                if (lista.getDan().getDan() == tecajnaListaPredicted.getDan().getDan()) {
+                    tecajnaLista = lista;
+                    break;
+                }
+            }
         }
 
         ViewHolder viewHolder = (ViewHolder) holder;

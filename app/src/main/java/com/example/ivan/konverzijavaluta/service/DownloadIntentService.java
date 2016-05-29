@@ -47,7 +47,7 @@ public class DownloadIntentService extends IntentService {
     public static final String START_PERIOD         = "startPeriod";
     public static final String END_PERIOD           = "endPeriod";
     public static final String DEFAULT_DATE         = "2016-05-24";
-    public static final String DATE_FORMAT          = "yyyy-MM-dd";
+    public static final String DATE_FORMAT_SQLITE   = "yyyy-MM-dd";
     public static final String DAILY_EXCHANGE_RATES = "D..EUR.SP00.A";
 
     public static final String DOWNLOAD_FINISHED    = "Download finished";
@@ -119,9 +119,9 @@ public class DownloadIntentService extends IntentService {
     private Map<String, String> getDownloadDatesParams() {
         Map<String, String> params = new HashMap<>();
         LocalDate downloadDate = Preferences.getLastDownloadDate(getApplicationContext());
-        String date = downloadDate.toString(DATE_FORMAT);
+        String date = downloadDate.toString(DATE_FORMAT_SQLITE);
         params.put(START_PERIOD, date);
-        params.put(END_PERIOD, LocalDate.now().toString(DATE_FORMAT));
+        params.put(END_PERIOD, LocalDate.now().toString(DATE_FORMAT_SQLITE));
         return params;
     }
 
@@ -132,7 +132,7 @@ public class DownloadIntentService extends IntentService {
 
         while (csv.next()) {
             String timePeriod = csv.get(COLUMN_TIME_PERIOD);
-            LocalDate date = LocalDate.parse(timePeriod, DateTimeFormat.forPattern(DATE_FORMAT));
+            LocalDate date = LocalDate.parse(timePeriod, DateTimeFormat.forPattern(DATE_FORMAT_SQLITE));
 
             String valuta = csv.get(COLUMN_UNIT);
             String value = csv.get(COLUMN_OBS_VALUE);

@@ -159,7 +159,7 @@ public class EncogService extends IntentService {
         data.normalize();
 
         // Set time series.
-        data.setLeadWindowSize(1);
+        data.setLeadWindowSize(WINDOW_SIZE);
         data.setLagWindowSize(WINDOW_SIZE);
 
         // Hold back some data for a final validation.
