@@ -4,7 +4,8 @@
     android:id="@+id/holder"
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="@color/background">
 
     <include
         android:id="@+id/toolbar"
@@ -48,14 +49,16 @@
             android:layout_height="0dp"
             android:layout_margin="10dp"
             android:layout_weight="1"
-            android:elevation="3dp" />
+            android:elevation="3dp"
+            android:text="@string/graph_data" />
 
         <Button
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_margin="10dp"
             android:layout_weight="1"
-            android:elevation="3dp" />
+            android:elevation="3dp"
+            android:text="@string/statistics" />
 
     </LinearLayout>
 

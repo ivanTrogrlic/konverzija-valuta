@@ -4,42 +4,26 @@
     android:id="@+id/holder"
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:background="@color/background"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="@color/background">
 
     <include
         android:id="@+id/toolbar"
         layout="@layout/toolbar" />
 
     <Button
-        android:id="@+id/predict"
+        android:id="@+id/select_date"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@id/toolbar"
         android:layout_margin="5dp"
-        android:text="@string/predict" />
-
-    <Spinner
-        android:id="@+id/spinner"
-        android:layout_width="100dp"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/predict"
-        android:layout_margin="10dp" />
-
-    <TextView
-        android:id="@+id/currency"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/spinner"
-        android:layout_margin="5dp"
-        android:gravity="center"
-        android:text="@string/currency" />
+        android:text="@string/select_date" />
 
     <LinearLayout
         android:id="@+id/header"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@id/currency"
+        android:layout_below="@id/select_date"
         android:orientation="horizontal"
         android:padding="3dp">
 

@@ -7,6 +7,9 @@ import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.support.v7.widget.Toolbar.OnMenuItemClickListener;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.Toast;
@@ -38,9 +41,9 @@ public class MainStartingActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.staring_activity);
 
-        setSupportActionBar(m_toolbar);
-
         ButterKnife.inject(this);
+
+        setupMenu();
 
         m_filter = new IntentFilter(DownloadReceiver.ACTION_RESP);
         m_filter.addCategory(Intent.CATEGORY_DEFAULT);
@@ -57,6 +60,31 @@ public class MainStartingActivity extends AppCompatActivity {
                 SaveCsvFileToSqlService.start(this);
             }
         }
+    }
+
+    private void setupMenu() {
+        setSupportActionBar(m_toolbar);
+        m_toolbar.setOnMenuItemClickListener(new OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                if (item.getItemId() == R.id.action_refresh) {
+                    if (!ServiceUtils.isMyServiceRunning(MainStartingActivity.this,
+                                                         DownloadIntentService.SERVICE_PATH)) {
+                        m_progressBar.setVisibility(View.VISIBLE);
+                        DownloadIntentService.start(MainStartingActivity.this);
+                        item.setVisible(false);
+                    }
+                    return true;
+                }
+                return false;
+            }
+        });
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
     }
 
     @Override
@@ -118,6 +146,7 @@ public class MainStartingActivity extends AppCompatActivity {
         @Override
         public void onReceive(Context context, Intent intent) {
             m_progressBar.setVisibility(View.INVISIBLE);
+            m_toolbar.getMenu().findItem(R.id.action_refresh).setVisible(true);
         }
 
     }

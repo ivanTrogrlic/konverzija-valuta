@@ -29,7 +29,8 @@
     <string name="exchange_calc">Exchange calculator</string>
     <string name="past_data">Past data</string>
     <string name="predicted_data">Predicted data</string>
-    <string name="hrk_data">Predicted HRK data</string>¸
+    <string name="graph_data">Graph data</string>
+    <string name="statistics">Statistics</string>
     <string name="select_date">Select date</string>
     <string name="predict">Predict</string>
     <string name="no_real_data">No real data yet</string>
@@ -42,107 +43,6 @@
     <string name="predicted">Predicted</string>
     <string name="real">Real</string>
     <string name="need_latest_data">Need to fetch the latest data first. You need to be connected to the internet</string>
-
-    <string-array name="valute">
-        <item>HRK</item>
-        <item>AUD</item>
-        <item>ATS</item>
-        <item>BEF</item>
-        <item>CAD</item>
-        <item>CZK</item>
-        <item>DKK</item>
-        <item>FIM</item>
-        <item>FRF</item>
-        <item>DEM</item>
-        <item>GRD</item>
-        <item>HUF</item>
-        <item>IEP</item>
-        <item>ITL</item>
-        <item>JPY</item>
-        <item>NLG</item>
-        <item>NOK</item>
-        <item>PTE</item>
-        <item>SKK</item>
-        <item>SIT</item>
-        <item>ESP</item>
-        <item>SEK</item>
-        <item>CHF</item>
-        <item>GRP</item>
-        <item>USD</item>
-        <item>XEU</item>
-        <item>EUR</item>
-        <item>LUF</item>
-        <item>PLN</item>
-    </string-array>
-
-    <string-array name="dani">
-        <item>1</item>
-        <item>2</item>
-        <item>3</item>
-        <item>4</item>
-        <item>5</item>
-        <item>6</item>
-        <item>7</item>
-        <item>8</item>
-        <item>9</item>
-        <item>10</item>
-        <item>11</item>
-        <item>12</item>
-        <item>13</item>
-        <item>14</item>
-        <item>15</item>
-        <item>16</item>
-        <item>17</item>
-        <item>18</item>
-        <item>19</item>
-        <item>20</item>
-        <item>21</item>
-        <item>22</item>
-        <item>23</item>
-        <item>24</item>
-        <item>25</item>
-        <item>26</item>
-        <item>27</item>
-        <item>28</item>
-        <item>29</item>
-        <item>30</item>
-        <item>31</item>
-    </string-array>
-
-    <string-array name="mjeseci">
-        <item>1</item>
-        <item>2</item>
-        <item>3</item>
-        <item>4</item>
-        <item>5</item>
-        <item>6</item>
-        <item>7</item>
-        <item>8</item>
-        <item>9</item>
-        <item>10</item>
-        <item>11</item>
-    </string-array>
-
-    <string-array name="godine">
-        <item>1997</item>
-        <item>1998</item>
-        <item>1999</item>
-        <item>2000</item>
-        <item>2001</item>
-        <item>2002</item>
-        <item>2003</item>
-        <item>2004</item>
-        <item>2005</item>
-        <item>2006</item>
-        <item>2008</item>
-        <item>2009</item>
-        <item>2010</item>
-        <item>2011</item>
-        <item>2012</item>
-        <item>2013</item>
-        <item>2014</item>
-        <item>2015</item>
-    </string-array>
     <string name="title_activity_calculator">CalculatorActivity</string>
 
 </resources>

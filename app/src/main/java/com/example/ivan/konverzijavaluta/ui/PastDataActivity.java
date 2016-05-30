@@ -31,11 +31,10 @@ import butterknife.OnClick;
  */
 public class PastDataActivity extends AppCompatActivity {
 
-    @InjectView(R.id.list)     RecyclerView m_list;
-    @InjectView(R.id.currency) TextView     m_date;
-    @InjectView(R.id.header1)  TextView     m_header1;
-    @InjectView(R.id.header2)  TextView     m_header2;
-    @InjectView(R.id.header3)  TextView     m_header3;
+    @InjectView(R.id.list)    RecyclerView m_list;
+    @InjectView(R.id.header1) TextView     m_header1;
+    @InjectView(R.id.header2) TextView     m_header2;
+    @InjectView(R.id.header3) TextView     m_header3;
 
     private PastDataAdapter        m_pastDataAdapter;
     private DanRepository          m_danRepository;
@@ -45,7 +44,7 @@ public class PastDataActivity extends AppCompatActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.list_data_activity);
+        setContentView(R.layout.past_data_activity);
 
         Toolbar mToolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(mToolbar);
@@ -60,15 +59,6 @@ public class PastDataActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         ButterKnife.reset(this);
-    }
-
-    @Override
-    public void onBackPressed() {
-        if (getFragmentManager().getBackStackEntryCount() > 0) {
-            getFragmentManager().popBackStack();
-        } else {
-            super.onBackPressed();
-        }
     }
 
     private void setHeader() {
@@ -89,7 +79,7 @@ public class PastDataActivity extends AppCompatActivity {
         m_tecajnaListaRepository = new TecajnaListaRepository(getContentResolver());
     }
 
-    @OnClick(R.id.predict)
+    @OnClick(R.id.select_date)
     public void setListaForDate() {
         LocalDate now = LocalDate.now();
         DatePickerDialog datePickerDialog = new DatePickerDialog(this, new OnDateSetListener() {
@@ -97,7 +87,6 @@ public class PastDataActivity extends AppCompatActivity {
             public void onDateSet(DatePicker view, int year, int monthOfYear, int dayOfMonth) {
                 LocalDate date = new LocalDate(year, monthOfYear + 1, dayOfMonth);
                 setListData(date);
-                m_date.setText(date.toString());
             }
         }, now.getYear(), now.getMonthOfYear() - 1, now.getDayOfMonth());
         datePickerDialog.getDatePicker().setMaxDate(now.toDate().getTime());
