@@ -40,9 +40,11 @@
     <string name="date">Date</string>
     <string name="value">Value</string>
     <string name="currency">Currency</string>
+    <string name="select_currency">Select currency</string>
     <string name="predicted">Predicted</string>
     <string name="real">Real</string>
     <string name="need_latest_data">Need to fetch the latest data first. You need to be connected to the internet</string>
     <string name="title_activity_calculator">CalculatorActivity</string>
+    <string name="show">Show</string>
 
 </resources>

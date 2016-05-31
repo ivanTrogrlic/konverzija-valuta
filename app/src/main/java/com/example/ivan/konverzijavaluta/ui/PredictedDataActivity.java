@@ -95,15 +95,6 @@ public class PredictedDataActivity extends AppCompatActivity {
         ButterKnife.reset(this);
     }
 
-    @Override
-    public void onBackPressed() {
-        if (getFragmentManager().getBackStackEntryCount() > 0) {
-            getFragmentManager().popBackStack();
-        } else {
-            super.onBackPressed();
-        }
-    }
-
     private void setHeader() {
         m_header1.setText(R.string.date);
         m_header2.setText(R.string.predicted);

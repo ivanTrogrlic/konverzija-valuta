@@ -56,6 +56,7 @@ android {
 
 repositories {
     maven { url 'http://org.encog' }
+    maven { url "https://jitpack.io" }
 }
 
 dependencies {
@@ -75,6 +76,7 @@ dependencies {
     compile('com.squareup.okhttp3:logging-interceptor:3.2.0') {
         exclude module: 'okhttp'
     }
+    compile 'com.github.PhilJay:MPAndroidChart:v2.2.5'
     compile 'com.android.support:appcompat-v7:23.4.0'
     compile 'com.jakewharton:butterknife:6.1.0'
     compile 'com.jakewharton.timber:timber:3.1.0'

@@ -41,7 +41,7 @@ public class TecajnaListaRepository {
         String whereClause = KonverzijaContract.TecajnaLista._ID + "=?";
         String[] whereArgs = {String.valueOf(p_id)};
 
-        List<TecajnaLista> list = query(projection, whereClause, whereArgs);
+        List<TecajnaLista> list = query(projection, whereClause, whereArgs, null);
         return list == null || list.isEmpty() ? null : list.get(0);
     }
 
@@ -54,7 +54,7 @@ public class TecajnaListaRepository {
         String whereClause = KonverzijaContract.TecajnaLista.DRZAVA_ID + "=?";
         String[] whereArgs = {String.valueOf(p_drzavaId)};
 
-        return query(projection, whereClause, whereArgs);
+        return query(projection, whereClause, whereArgs, null);
     }
 
     /**
@@ -66,7 +66,7 @@ public class TecajnaListaRepository {
         String whereClause = KonverzijaContract.TecajnaLista.DAN_ID + "=?";
         String[] whereArgs = {String.valueOf(p_danId)};
 
-        return query(projection, whereClause, whereArgs);
+        return query(projection, whereClause, whereArgs, null);
     }
 
     /**
@@ -78,7 +78,7 @@ public class TecajnaListaRepository {
         String whereClause = KonverzijaContract.TecajnaLista.DAN_ID + "=? AND " + KonverzijaContract.TecajnaLista.DRZAVA_ID + "=?";
         String[] whereArgs = {String.valueOf(p_danId), String.valueOf(p_drzavaId)};
 
-        List<TecajnaLista> list = query(projection, whereClause, whereArgs);
+        List<TecajnaLista> list = query(projection, whereClause, whereArgs, null);
         return list == null || list.isEmpty() ? null : list.get(0);
     }
 
@@ -90,8 +90,9 @@ public class TecajnaListaRepository {
         String whereClause = Tables.TECAJNA_LISTA + "." + Dan.DAN + ">=? AND " + Tables.TECAJNA_LISTA + "." + Dan.DAN + "<=?";
         String[] whereArgs = {p_from.toString(DownloadIntentService.DATE_FORMAT_SQLITE), p_to.toString(
                 DownloadIntentService.DATE_FORMAT_SQLITE)};
+        String orderBy = Tables.DAN + "." + Dan.DAN + " ASC";
 
-        return query(projection, whereClause, whereArgs);
+        return query(projection, whereClause, whereArgs, orderBy);
     }
 
     /**
@@ -102,8 +103,9 @@ public class TecajnaListaRepository {
         String whereClause = Tables.DAN + "." + Dan.DAN + ">=? AND " + Tables.DAN + "." + Dan.DAN + "<=? AND " + KonverzijaContract.TecajnaLista.DRZAVA_ID + "=?";
         String[] whereArgs = {p_from.toString(DownloadIntentService.DATE_FORMAT_SQLITE), p_to.toString(
                 DownloadIntentService.DATE_FORMAT_SQLITE), String.valueOf(p_drzavaId)};
+        String orderBy = Tables.DAN + "." + Dan.DAN + " ASC";
 
-        return query(projection, whereClause, whereArgs);
+        return query(projection, whereClause, whereArgs, orderBy);
     }
 
     /**
@@ -144,12 +146,13 @@ public class TecajnaListaRepository {
     }
 
     @Nullable
-    private List<TecajnaLista> query(String[] p_projection, String p_whereClause, String[] p_whereArgs) {
+    private List<TecajnaLista> query(String[] p_projection, String p_whereClause, String[] p_whereArgs,
+                                     String p_orderBy) {
         Uri uri = KonverzijaContract.TecajnaLista.CONTENT_URI
                 .buildUpon()
                 .appendPath(KonverzijaContract.PATH_WITH_DAN_AND_DRZAVA)
                 .build();
-        Cursor cursor = m_contentResolver.query(uri, p_projection, p_whereClause, p_whereArgs, null);
+        Cursor cursor = m_contentResolver.query(uri, p_projection, p_whereClause, p_whereArgs, p_orderBy);
         if (cursor == null) {
             return null;
         }

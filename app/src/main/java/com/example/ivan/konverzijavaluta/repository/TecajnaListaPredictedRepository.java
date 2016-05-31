@@ -98,8 +98,9 @@ public class TecajnaListaPredictedRepository {
         String whereClause = Tables.DAN + "." + Dan.DAN + ">=? AND " + Tables.DAN + "." + Dan.DAN + "<=? AND " + KonverzijaContract.TecajnaListaPredicted.DRZAVA_ID + "=?";
         String[] whereArgs = {p_from.toString(DownloadIntentService.DATE_FORMAT_SQLITE), p_to.toString(
                 DownloadIntentService.DATE_FORMAT_SQLITE), String.valueOf(p_drzavaId)};
+        String orderBy = Tables.DAN + "." + Dan.DAN + " ASC";
 
-        return query(projection, whereClause, whereArgs, null);
+        return query(projection, whereClause, whereArgs, orderBy);
     }
 
     /**
