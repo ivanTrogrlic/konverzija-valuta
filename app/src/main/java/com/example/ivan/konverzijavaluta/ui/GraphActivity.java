@@ -210,7 +210,6 @@ public class GraphActivity extends AppCompatActivity implements OnChartValueSele
             TecajnaListaPredicted lista = tecajnaListaIterator.next();
             val = lista.getSrednjiTecaj().doubleValue();
             while (current.isBefore(lista.getDan().getDan())) {
-                values.add(new Entry((float) val, i));
                 current = current.plusDays(1);
                 i++;
             }
