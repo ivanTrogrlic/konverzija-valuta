@@ -1,8 +1,8 @@
 package com.example.ivan.konverzijavaluta.rest;
 
-import android.content.Context;
-
 import com.example.ivan.konverzijavaluta.BuildConfig;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.concurrent.TimeUnit;
 
@@ -12,6 +12,7 @@ import okhttp3.logging.HttpLoggingInterceptor.Level;
 import okhttp3.logging.HttpLoggingInterceptor.Logger;
 import retrofit2.Retrofit;
 import retrofit2.Retrofit.Builder;
+import retrofit2.converter.jackson.JacksonConverterFactory;
 import timber.log.Timber;
 
 /**
@@ -19,21 +20,34 @@ import timber.log.Timber;
  */
 public class RestClient {
 
-    private static Retrofit s_retrofit;
+    private static Retrofit s_retrofitEcb;
+    private static Retrofit s_retrofitWorld;
 
-    public static void init(Context p_context) {
-        init(p_context, "https://sdw-wsrest.ecb.europa.eu/service/");
+    public static void init() {
+        initEcb("https://sdw-wsrest.ecb.europa.eu/service/");
+        initWord("http://api.worldbank.org/");
     }
 
-    public static void init(Context p_context, String p_endpoint) {
+    public static void initEcb(String p_endpoint) {
         Builder builder = new Retrofit.Builder()
                 .baseUrl(p_endpoint)
-                .client(provideHttpClient(p_context));
+                .client(provideHttpClient());
 
-        s_retrofit = builder.build();
+        s_retrofitEcb = builder.build();
     }
 
-    public static OkHttpClient provideHttpClient(Context p_context) {
+    public static void initWord(String p_endpoint) {
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.enable(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
+        Builder builder = new Retrofit.Builder()
+                .baseUrl(p_endpoint)
+                .addConverterFactory(JacksonConverterFactory.create(objectMapper))
+                .client(provideHttpClient());
+
+        s_retrofitWorld = builder.build();
+    }
+
+    public static OkHttpClient provideHttpClient() {
         HttpLoggingInterceptor logging = new HttpLoggingInterceptor(new Logger() {
             @Override
             public void log(String message) {
@@ -52,7 +66,11 @@ public class RestClient {
         return builder.build();
     }
 
-    public static <T> T create(Class<T> serviceClass) {
-        return s_retrofit.create(serviceClass);
+    public static <T> T createEcb(Class<T> serviceClass) {
+        return s_retrofitEcb.create(serviceClass);
+    }
+
+    public static <T> T createWorld(Class<T> serviceClass) {
+        return s_retrofitWorld.create(serviceClass);
     }
 }

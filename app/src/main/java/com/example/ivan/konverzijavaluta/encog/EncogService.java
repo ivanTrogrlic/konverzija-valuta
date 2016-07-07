@@ -4,15 +4,20 @@ import android.app.IntentService;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
+import android.support.annotation.NonNull;
 import android.support.v4.util.Pair;
 
 import com.example.ivan.konverzijavaluta.entitet.Dan;
 import com.example.ivan.konverzijavaluta.entitet.Drzava;
 import com.example.ivan.konverzijavaluta.entitet.TecajnaListaPredicted;
 import com.example.ivan.konverzijavaluta.entitet.Valute;
+import com.example.ivan.konverzijavaluta.entitet.WorldBankModel;
 import com.example.ivan.konverzijavaluta.repository.DanRepository;
 import com.example.ivan.konverzijavaluta.repository.DrzavaRepository;
 import com.example.ivan.konverzijavaluta.repository.TecajnaListaPredictedRepository;
+import com.example.ivan.konverzijavaluta.rest.EcbWebService;
+import com.example.ivan.konverzijavaluta.rest.RestClient;
+import com.example.ivan.konverzijavaluta.rest.WorldBankWebService;
 import com.example.ivan.konverzijavaluta.service.DownloadIntentService;
 import com.example.ivan.konverzijavaluta.service.SaveCsvFileToSqlService;
 import com.example.ivan.konverzijavaluta.ui.PredictedDataActivity;
@@ -20,7 +25,6 @@ import com.example.ivan.konverzijavaluta.util.FileUtils;
 import com.example.ivan.konverzijavaluta.util.Preferences;
 
 import org.encog.ConsoleStatusReportable;
-import org.encog.Encog;
 import org.encog.mathutil.error.ErrorCalculation;
 import org.encog.mathutil.error.ErrorCalculationMode;
 import org.encog.ml.MLRegression;
@@ -48,7 +52,14 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.math.BigDecimal;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
+import okhttp3.ResponseBody;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 import timber.log.Timber;
 
 /**
@@ -62,8 +73,21 @@ public class EncogService extends IntentService {
     public static final String EXCHANGE_LIST_ACTUAL_TEMP = "exchangelistactualtemp.csv";
     public static final String PREDICTING_VALUTA         = "predicting_valuta";
 
+    public static final String DEFAULT_DATE        = "2015-05-1";
+    public static final String START_YEAR          = "1999";
+    public static final String END_YEAR            = "2015";
+    public static final String DATE_FORMAT_MONTHLY = "yyyy-MM";
+
+    public static final String PARAM_DATE   = "date";
+    public static final String PARAM_FORMAT = "format";
+    public static final String JSON         = "json";
+
     private String m_valuta;
     private String m_valutaLowerCase;
+    private Map<LocalDate, Double> m_rhci       = new HashMap<>();
+    private Map<LocalDate, Double> m_nhci       = new HashMap<>();
+    private Map<String, Double>    m_debt       = new HashMap<>();
+    private Map<String, Double>    m_corruption = new HashMap<>();
 
     public EncogService() {
         super("EncogService");
@@ -96,24 +120,183 @@ public class EncogService extends IntentService {
                 FileUtils.copyFileToExternalDirectory(getApplicationContext(), "trening" + m_valutaLowerCase + ".csv",
                                                       "trening" + m_valutaLowerCase + ".csv");
                 Preferences.saveBoolean(getApplicationContext(), m_valutaLowerCase + "_saved", true);
+
+//                downloadTrainingData();
             }
 
-            Pair<MLRegression, NormalizationHelper> pair = trainData();
+            downloadTrainingData();
 
-            File actual = getActualExchangeListPredictedLines();
-            if (actual == null) return; //Shouldn't ever happen
-
-            predictData(pair.first, pair.second, actual);
-
-            // Delete data file and shut down.
-            actual.delete();
-            Encog.getInstance().shutdown();
-            sendBroadcast(DownloadIntentService.DOWNLOAD_FINISHED);
+//            Pair<MLRegression, NormalizationHelper> pair = trainData();
+//
+//            File actual = getActualExchangeListPredictedLines();
+//            if (actual == null) return; //Shouldn't ever happen
+//
+//            predictData(pair.first, pair.second, actual);
+//
+//            // Delete data file and shut down.
+//            actual.delete();
+//            Encog.getInstance().shutdown();
+//            sendBroadcast(DownloadIntentService.DOWNLOAD_FINISHED);
         } catch (Exception ex) {
             Timber.e(ex, "Encog failed. " + ex.getMessage());
             sendBroadcast(DownloadIntentService.DOWNLOAD_FAILED);
         }
 
+    }
+
+    private void downloadTrainingData() {
+        String query = "M.H42." + m_valutaLowerCase.toUpperCase() + ".NRC0.A";
+        Map<String, String> params = getEcbDatesParams();
+        RestClient.createEcb(EcbWebService.class).get(query, params).enqueue(
+                new Callback<ResponseBody>() {
+                    @Override
+                    public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                        if (!response.isSuccessful()) {
+                            Timber.e(new Exception(), response.message());
+                            return;
+                        }
+
+                        try {
+                            handleRhciResponse(response);
+                        } catch (IOException e) {
+                            Timber.e(e, e.getMessage());
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<ResponseBody> call, Throwable t) {
+                        Timber.e(t, t.getMessage());
+                    }
+                });
+    }
+
+    private void handleRhciResponse(Response<ResponseBody> p_response) throws IOException {
+        File file = FileUtils.convertResponseToCsvFile(getApplicationContext(), p_response);
+        ReadCSV csv = new ReadCSV(file, true, new CSVFormat());
+
+        while (csv.next()) {
+            String timePeriod = csv.get(DownloadIntentService.COLUMN_TIME_PERIOD);
+            LocalDate date = LocalDate.parse(timePeriod, DateTimeFormat.forPattern(DATE_FORMAT_MONTHLY));
+            double value = csv.getDouble(DownloadIntentService.COLUMN_OBS_VALUE);
+
+            m_rhci.put(date, value);
+        }
+        file.delete();
+
+        String query = "M.H42." + m_valutaLowerCase.toUpperCase() + ".NN00.A";
+        Map<String, String> params = getEcbDatesParams();
+        RestClient.createEcb(EcbWebService.class).get(query, params).enqueue(
+                new Callback<ResponseBody>() {
+                    @Override
+                    public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                        if (!response.isSuccessful()) {
+                            Timber.e(new Exception(), response.message());
+                            return;
+                        }
+
+                        try {
+                            handleNhciResponse(response);
+                        } catch (IOException e) {
+                            Timber.e(e, e.getMessage());
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<ResponseBody> call, Throwable t) {
+                        Timber.e(t, t.getMessage());
+                    }
+                });
+    }
+
+    private void handleNhciResponse(Response<ResponseBody> p_response) throws IOException {
+        File file = FileUtils.convertResponseToCsvFile(getApplicationContext(), p_response);
+        ReadCSV csv = new ReadCSV(file, true, new CSVFormat());
+
+        while (csv.next()) {
+            String timePeriod = csv.get(DownloadIntentService.COLUMN_TIME_PERIOD);
+            LocalDate date = LocalDate.parse(timePeriod, DateTimeFormat.forPattern(DATE_FORMAT_MONTHLY));
+            double value = csv.getDouble(DownloadIntentService.COLUMN_OBS_VALUE);
+
+            m_nhci.put(date, value);
+        }
+        file.delete();
+
+        String query = "USA/indicators/GFDD.DM.07"; //TODO
+        Map<String, String> params = getWorldDatesParams();
+        RestClient.createWorld(WorldBankWebService.class).get(query, params).enqueue(
+                new Callback<List<WorldBankModel>[]>() {
+                    @Override
+                    public void onResponse(Call<List<WorldBankModel>[]> call,
+                                           Response<List<WorldBankModel>[]> response) {
+                        if (!response.isSuccessful()) {
+                            Timber.e(new Exception(), response.message());
+                            return;
+                        }
+
+                        try {
+                            handleDebtResponse(response.body()[1]);
+                        } catch (IOException e) {
+                            Timber.e(e, e.getMessage());
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<List<WorldBankModel>[]> call, Throwable t) {
+                        Timber.e(t, t.getMessage());
+                    }
+                });
+    }
+
+    private void handleDebtResponse(List<WorldBankModel> p_models) throws IOException {
+        for (WorldBankModel model : p_models) m_debt.put(model.getDate(), model.getValue());
+
+        String query = "USA/indicators/CC.NO.SRC"; //TODO
+        Map<String, String> params = getWorldDatesParams();
+        RestClient.createWorld(WorldBankWebService.class).get(query, params).enqueue(
+                new Callback<List<WorldBankModel>[]>() {
+                    @Override
+                    public void onResponse(Call<List<WorldBankModel>[]> call,
+                                           Response<List<WorldBankModel>[]> response) {
+                        if (!response.isSuccessful()) {
+                            Timber.e(new Exception(), response.message());
+                            return;
+                        }
+
+                        try {
+                            handleCorruptionResponse(response.body()[1]);
+                        } catch (IOException e) {
+                            Timber.e(e, e.getMessage());
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<List<WorldBankModel>[]> call, Throwable t) {
+                        Timber.e(t, t.getMessage());
+                    }
+                });
+    }
+
+    private void handleCorruptionResponse(List<WorldBankModel> p_models) throws IOException {
+        for (WorldBankModel model : p_models) m_corruption.put(model.getDate(), model.getValue());
+    }
+
+    @NonNull
+    private Map<String, String> getEcbDatesParams() {
+        Map<String, String> params = new HashMap<>();
+        LocalDate date = LocalDate.parse(DEFAULT_DATE,
+                                         DateTimeFormat.forPattern(DownloadIntentService.DATE_FORMAT_SQLITE));
+        params.put(DownloadIntentService.START_PERIOD, date.toString(DownloadIntentService.DATE_FORMAT_SQLITE));
+        params.put(DownloadIntentService.END_PERIOD,
+                   LocalDate.now().toString(DownloadIntentService.DATE_FORMAT_SQLITE));
+        return params;
+    }
+
+    @NonNull
+    private Map<String, String> getWorldDatesParams() {
+        Map<String, String> params = new HashMap<>();
+        params.put(PARAM_DATE, START_YEAR + ":" + END_YEAR);
+        params.put(PARAM_FORMAT, JSON);
+        return params;
     }
 
     private Pair<MLRegression, NormalizationHelper> trainData() {

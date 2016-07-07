@@ -23,12 +23,10 @@ import org.encog.util.csv.ReadCSV;
 import org.joda.time.LocalDate;
 import org.joda.time.format.DateTimeFormat;
 
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
@@ -80,31 +78,33 @@ public class DownloadIntentService extends IntentService {
     private void downloadLatestExchangeValues() {
         Map<String, String> params = getDownloadDatesParams();
 
-        RestClient.create(EcbWebService.class).get(DAILY_EXCHANGE_RATES, params).enqueue(new Callback<ResponseBody>() {
-            @Override
-            public void onResponse(retrofit2.Call<ResponseBody> call, retrofit2.Response<ResponseBody> response) {
-                if (!response.isSuccessful()) {
-                    Timber.e(new Exception(), response.message());
-                    sendDownloadResponse(DOWNLOAD_FAILED);
-                    return;
-                }
+        RestClient.createEcb(EcbWebService.class).get(DAILY_EXCHANGE_RATES, params)
+                .enqueue(new Callback<ResponseBody>() {
+                    @Override
+                    public void onResponse(retrofit2.Call<ResponseBody> call,
+                                           retrofit2.Response<ResponseBody> response) {
+                        if (!response.isSuccessful()) {
+                            Timber.e(new Exception(), response.message());
+                            sendDownloadResponse(DOWNLOAD_FAILED);
+                            return;
+                        }
 
-                try {
-                    handleResponse(response);
-                } catch (IOException e) {
-                    Timber.e(e, e.getMessage());
-                    sendDownloadResponse(DOWNLOAD_FAILED);
-                }
+                        try {
+                            handleResponse(response);
+                        } catch (IOException e) {
+                            Timber.e(e, e.getMessage());
+                            sendDownloadResponse(DOWNLOAD_FAILED);
+                        }
 
-                sendDownloadResponse(DOWNLOAD_FINISHED);
-            }
+                        sendDownloadResponse(DOWNLOAD_FINISHED);
+                    }
 
-            @Override
-            public void onFailure(retrofit2.Call<ResponseBody> call, Throwable t) {
-                Timber.e(t, t.getMessage());
-                sendDownloadResponse(DOWNLOAD_FAILED);
-            }
-        });
+                    @Override
+                    public void onFailure(retrofit2.Call<ResponseBody> call, Throwable t) {
+                        Timber.e(t, t.getMessage());
+                        sendDownloadResponse(DOWNLOAD_FAILED);
+                    }
+                });
     }
 
     private void sendDownloadResponse(String p_response) {
@@ -126,7 +126,7 @@ public class DownloadIntentService extends IntentService {
     }
 
     private void handleResponse(retrofit2.Response<ResponseBody> response) throws IOException {
-        File file = convertResponseToCsvFile(response);
+        File file = FileUtils.convertResponseToCsvFile(getApplicationContext(), response);
 
         ReadCSV csv = new ReadCSV(file, true, new CSVFormat());
 
@@ -145,37 +145,6 @@ public class DownloadIntentService extends IntentService {
         appendResponseToCsv();
         Preferences.saveDate(getApplicationContext(), Preferences.LAST_DOWNLOADED_EXCHANGE_LIST, LocalDate.now());
         file.delete();
-    }
-
-    @NonNull
-    private File convertResponseToCsvFile(retrofit2.Response<ResponseBody> response) throws IOException {
-        BufferedWriter writer;
-        BufferedReader reader;
-        String path1 = getExternalFilesDir(null).getPath();
-        String path2 = "dataSet.csv";
-        String path = path1 + "/" + path2;
-        File file = new File(path);
-
-        if (!file.exists()) {
-            file.getParentFile().mkdirs();
-        }
-
-        writer = new BufferedWriter(new FileWriter(path));
-        reader = new BufferedReader(new InputStreamReader(response.body().byteStream()));
-        StringBuilder sb = new StringBuilder();
-        String line;
-
-        while ((line = reader.readLine()) != null) {
-            Timber.d(line);
-            sb.append(line + "\n");
-        }
-
-        String result = sb.toString();
-
-        writer.write(result);
-        writer.close();
-        reader.close();
-        return file;
     }
 
     private void appendResponseToCsv() throws IOException {

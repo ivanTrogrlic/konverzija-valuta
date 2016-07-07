@@ -25,7 +25,7 @@ public class KonverzijaValutaApplication extends Application {
         }
 
         JodaTimeAndroid.init(this);
-        RestClient.init(this);
+        RestClient.init();
 
     }
 }
