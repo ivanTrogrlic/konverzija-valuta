@@ -23,6 +23,7 @@ import com.example.ivan.konverzijavaluta.service.SaveCsvFileToSqlService;
 import com.example.ivan.konverzijavaluta.ui.PredictedDataActivity;
 import com.example.ivan.konverzijavaluta.util.FileUtils;
 import com.example.ivan.konverzijavaluta.util.Preferences;
+import com.example.ivan.konverzijavaluta.util.ServiceUtils;
 
 import org.encog.ConsoleStatusReportable;
 import org.encog.mathutil.error.ErrorCalculation;
@@ -74,13 +75,24 @@ public class EncogService extends IntentService {
     public static final String PREDICTING_VALUTA         = "predicting_valuta";
 
     public static final String DEFAULT_DATE        = "2015-05-1";
+    public static final String START_DATE          = "1999-01-1";
     public static final String START_YEAR          = "1999";
     public static final String END_YEAR            = "2015";
     public static final String DATE_FORMAT_MONTHLY = "yyyy-MM";
+    public static final String DATE_FORMAT         = "M/d/yyyy";
 
     public static final String PARAM_DATE   = "date";
     public static final String PARAM_FORMAT = "format";
     public static final String JSON         = "json";
+
+    public static final String EXCHANGE_LIST_TRENING_FULL = "exchangelisttraningfull.csv";
+
+    public static final String COLUMN_DATE       = "Date";
+    public static final String COLUMN_NEER       = "NEER";
+    public static final String COLUMN_RHCI       = "RHCI";
+    public static final String COLUMN_NHCI       = "NHCI";
+    public static final String COLUMN_DEBT       = "DEBT";
+    public static final String COLUMN_CORRUPTION = "CORRUPTION";
 
     private String m_valuta;
     private String m_valutaLowerCase;
@@ -120,14 +132,12 @@ public class EncogService extends IntentService {
                 FileUtils.copyFileToExternalDirectory(getApplicationContext(), "trening" + m_valutaLowerCase + ".csv",
                                                       "trening" + m_valutaLowerCase + ".csv");
                 Preferences.saveBoolean(getApplicationContext(), m_valutaLowerCase + "_saved", true);
-
-//                downloadTrainingData();
             }
 
             downloadTrainingData();
 
 //            Pair<MLRegression, NormalizationHelper> pair = trainData();
-//
+
 //            File actual = getActualExchangeListPredictedLines();
 //            if (actual == null) return; //Shouldn't ever happen
 //
@@ -144,164 +154,9 @@ public class EncogService extends IntentService {
 
     }
 
-    private void downloadTrainingData() {
-        String query = "M.H42." + m_valutaLowerCase.toUpperCase() + ".NRC0.A";
-        Map<String, String> params = getEcbDatesParams();
-        RestClient.createEcb(EcbWebService.class).get(query, params).enqueue(
-                new Callback<ResponseBody>() {
-                    @Override
-                    public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
-                        if (!response.isSuccessful()) {
-                            Timber.e(new Exception(), response.message());
-                            return;
-                        }
-
-                        try {
-                            handleRhciResponse(response);
-                        } catch (IOException e) {
-                            Timber.e(e, e.getMessage());
-                        }
-                    }
-
-                    @Override
-                    public void onFailure(Call<ResponseBody> call, Throwable t) {
-                        Timber.e(t, t.getMessage());
-                    }
-                });
-    }
-
-    private void handleRhciResponse(Response<ResponseBody> p_response) throws IOException {
-        File file = FileUtils.convertResponseToCsvFile(getApplicationContext(), p_response);
-        ReadCSV csv = new ReadCSV(file, true, new CSVFormat());
-
-        while (csv.next()) {
-            String timePeriod = csv.get(DownloadIntentService.COLUMN_TIME_PERIOD);
-            LocalDate date = LocalDate.parse(timePeriod, DateTimeFormat.forPattern(DATE_FORMAT_MONTHLY));
-            double value = csv.getDouble(DownloadIntentService.COLUMN_OBS_VALUE);
-
-            m_rhci.put(date, value);
-        }
-        file.delete();
-
-        String query = "M.H42." + m_valutaLowerCase.toUpperCase() + ".NN00.A";
-        Map<String, String> params = getEcbDatesParams();
-        RestClient.createEcb(EcbWebService.class).get(query, params).enqueue(
-                new Callback<ResponseBody>() {
-                    @Override
-                    public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
-                        if (!response.isSuccessful()) {
-                            Timber.e(new Exception(), response.message());
-                            return;
-                        }
-
-                        try {
-                            handleNhciResponse(response);
-                        } catch (IOException e) {
-                            Timber.e(e, e.getMessage());
-                        }
-                    }
-
-                    @Override
-                    public void onFailure(Call<ResponseBody> call, Throwable t) {
-                        Timber.e(t, t.getMessage());
-                    }
-                });
-    }
-
-    private void handleNhciResponse(Response<ResponseBody> p_response) throws IOException {
-        File file = FileUtils.convertResponseToCsvFile(getApplicationContext(), p_response);
-        ReadCSV csv = new ReadCSV(file, true, new CSVFormat());
-
-        while (csv.next()) {
-            String timePeriod = csv.get(DownloadIntentService.COLUMN_TIME_PERIOD);
-            LocalDate date = LocalDate.parse(timePeriod, DateTimeFormat.forPattern(DATE_FORMAT_MONTHLY));
-            double value = csv.getDouble(DownloadIntentService.COLUMN_OBS_VALUE);
-
-            m_nhci.put(date, value);
-        }
-        file.delete();
-
-        String query = "USA/indicators/GFDD.DM.07"; //TODO
-        Map<String, String> params = getWorldDatesParams();
-        RestClient.createWorld(WorldBankWebService.class).get(query, params).enqueue(
-                new Callback<List<WorldBankModel>[]>() {
-                    @Override
-                    public void onResponse(Call<List<WorldBankModel>[]> call,
-                                           Response<List<WorldBankModel>[]> response) {
-                        if (!response.isSuccessful()) {
-                            Timber.e(new Exception(), response.message());
-                            return;
-                        }
-
-                        try {
-                            handleDebtResponse(response.body()[1]);
-                        } catch (IOException e) {
-                            Timber.e(e, e.getMessage());
-                        }
-                    }
-
-                    @Override
-                    public void onFailure(Call<List<WorldBankModel>[]> call, Throwable t) {
-                        Timber.e(t, t.getMessage());
-                    }
-                });
-    }
-
-    private void handleDebtResponse(List<WorldBankModel> p_models) throws IOException {
-        for (WorldBankModel model : p_models) m_debt.put(model.getDate(), model.getValue());
-
-        String query = "USA/indicators/CC.NO.SRC"; //TODO
-        Map<String, String> params = getWorldDatesParams();
-        RestClient.createWorld(WorldBankWebService.class).get(query, params).enqueue(
-                new Callback<List<WorldBankModel>[]>() {
-                    @Override
-                    public void onResponse(Call<List<WorldBankModel>[]> call,
-                                           Response<List<WorldBankModel>[]> response) {
-                        if (!response.isSuccessful()) {
-                            Timber.e(new Exception(), response.message());
-                            return;
-                        }
-
-                        try {
-                            handleCorruptionResponse(response.body()[1]);
-                        } catch (IOException e) {
-                            Timber.e(e, e.getMessage());
-                        }
-                    }
-
-                    @Override
-                    public void onFailure(Call<List<WorldBankModel>[]> call, Throwable t) {
-                        Timber.e(t, t.getMessage());
-                    }
-                });
-    }
-
-    private void handleCorruptionResponse(List<WorldBankModel> p_models) throws IOException {
-        for (WorldBankModel model : p_models) m_corruption.put(model.getDate(), model.getValue());
-    }
-
-    @NonNull
-    private Map<String, String> getEcbDatesParams() {
-        Map<String, String> params = new HashMap<>();
-        LocalDate date = LocalDate.parse(DEFAULT_DATE,
-                                         DateTimeFormat.forPattern(DownloadIntentService.DATE_FORMAT_SQLITE));
-        params.put(DownloadIntentService.START_PERIOD, date.toString(DownloadIntentService.DATE_FORMAT_SQLITE));
-        params.put(DownloadIntentService.END_PERIOD,
-                   LocalDate.now().toString(DownloadIntentService.DATE_FORMAT_SQLITE));
-        return params;
-    }
-
-    @NonNull
-    private Map<String, String> getWorldDatesParams() {
-        Map<String, String> params = new HashMap<>();
-        params.put(PARAM_DATE, START_YEAR + ":" + END_YEAR);
-        params.put(PARAM_FORMAT, JSON);
-        return params;
-    }
-
     private Pair<MLRegression, NormalizationHelper> trainData() {
         ErrorCalculation.setMode(ErrorCalculationMode.RMS);
-        String path = getExternalFilesDir(null).getPath() + "/" + "trening" + m_valutaLowerCase + ".csv";
+        String path = getExternalFilesDir(null).getPath() + "/" + "fulltrening" + m_valutaLowerCase + ".csv";
         File filename = new File(path);
 
         // Define the format of the data file (CSV format)
@@ -314,15 +169,31 @@ public class EncogService extends IntentService {
         // Define how missing values are represented.
         data.getNormHelper().defineUnknownValue("?");
 
+        ColumnDefinition value = data.defineSourceColumn(m_valuta, ColumnType.continuous);
+        ColumnDefinition neer = data.defineSourceColumn(COLUMN_NEER, ColumnType.continuous);
+        ColumnDefinition rhci = data.defineSourceColumn(COLUMN_RHCI, ColumnType.continuous);
+        ColumnDefinition nhci = data.defineSourceColumn(COLUMN_NHCI, ColumnType.continuous);
+        ColumnDefinition debt = data.defineSourceColumn(COLUMN_DEBT, ColumnType.continuous);
+        ColumnDefinition corruption = data.defineSourceColumn(COLUMN_CORRUPTION, ColumnType.continuous);
 
-        ColumnDefinition column = data.defineSourceColumn(m_valuta, ColumnType.continuous);
-        data.getNormHelper().defineMissingHandler(column, new MeanMissingHandler());
+        data.getNormHelper().defineMissingHandler(value, new MeanMissingHandler());
+        data.getNormHelper().defineMissingHandler(neer, new MeanMissingHandler());
+        data.getNormHelper().defineMissingHandler(rhci, new MeanMissingHandler());
+        data.getNormHelper().defineMissingHandler(nhci, new MeanMissingHandler());
+        data.getNormHelper().defineMissingHandler(debt, new MeanMissingHandler());
+        data.getNormHelper().defineMissingHandler(corruption, new MeanMissingHandler());
 
         // Analyze the data, determine the min/max/mean/sd of every column.
         data.analyze();
 
-        data.defineInput(column);
-        data.defineOutput(column);
+        data.defineInput(value);
+        data.defineInput(neer);
+        data.defineInput(rhci);
+        data.defineInput(nhci);
+        data.defineInput(debt);
+        data.defineInput(corruption);
+
+        data.defineOutput(value);
 
         // Create feedforward neural network as the model type.
         // MLMethodFactory.TYPE_FEEDFORWARD.
@@ -487,5 +358,206 @@ public class EncogService extends IntentService {
             Timber.e(e, e.getMessage());
             return null;
         }
+    }
+
+
+    ///////////////////// DOWNLOADING TRAINING DATA /////////////////////////////////////////////
+    // TODO Lots of duplicated code below, refactor!!!
+
+    private void downloadTrainingData() {
+        String query = "M.H42." + m_valuta + ".NRC0.A";
+        Map<String, String> params = getTrainingEcbParams();
+        RestClient.createEcb(EcbWebService.class).get(query, params).enqueue(
+                new Callback<ResponseBody>() {
+                    @Override
+                    public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                        if (!response.isSuccessful()) {
+                            Timber.e(new Exception(), response.message());
+                            return;
+                        }
+
+                        try {
+                            handleRhciResponse(response);
+                        } catch (IOException e) {
+                            Timber.e(e, e.getMessage());
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<ResponseBody> call, Throwable t) {
+                        Timber.e(t, t.getMessage());
+                    }
+                });
+    }
+
+    private void handleRhciResponse(Response<ResponseBody> p_response) throws IOException {
+        File file = FileUtils.convertResponseToCsvFile(getApplicationContext(), p_response);
+        ReadCSV csv = new ReadCSV(file, true, new CSVFormat());
+
+        while (csv.next()) {
+            String timePeriod = csv.get(DownloadIntentService.COLUMN_TIME_PERIOD);
+            LocalDate date = LocalDate.parse(timePeriod, DateTimeFormat.forPattern(DATE_FORMAT_MONTHLY));
+            double value = csv.getDouble(DownloadIntentService.COLUMN_OBS_VALUE);
+
+            m_rhci.put(date, value);
+        }
+        file.delete();
+
+        String query = "M.H42." + m_valuta + ".NN00.A";
+        Map<String, String> params = getTrainingEcbParams();
+        RestClient.createEcb(EcbWebService.class).get(query, params).enqueue(
+                new Callback<ResponseBody>() {
+                    @Override
+                    public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                        if (!response.isSuccessful()) {
+                            Timber.e(new Exception(), response.message());
+                            return;
+                        }
+
+                        try {
+                            handleNhciResponse(response);
+                        } catch (IOException e) {
+                            Timber.e(e, e.getMessage());
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<ResponseBody> call, Throwable t) {
+                        Timber.e(t, t.getMessage());
+                    }
+                });
+    }
+
+    private void handleNhciResponse(Response<ResponseBody> p_response) throws IOException {
+        File file = FileUtils.convertResponseToCsvFile(getApplicationContext(), p_response);
+        ReadCSV csv = new ReadCSV(file, true, new CSVFormat());
+
+        while (csv.next()) {
+            String timePeriod = csv.get(DownloadIntentService.COLUMN_TIME_PERIOD);
+            LocalDate date = LocalDate.parse(timePeriod, DateTimeFormat.forPattern(DATE_FORMAT_MONTHLY));
+            double value = csv.getDouble(DownloadIntentService.COLUMN_OBS_VALUE);
+
+            m_nhci.put(date, value);
+        }
+        file.delete();
+
+        String query = ServiceUtils.countryForCurrency(m_valuta) + "/indicators/GFDD.DM.07";
+        Map<String, String> params = getTrainingWorldParams();
+        RestClient.createWorld(WorldBankWebService.class).get(query, params).enqueue(
+                new Callback<List<WorldBankModel>[]>() {
+                    @Override
+                    public void onResponse(Call<List<WorldBankModel>[]> call,
+                                           Response<List<WorldBankModel>[]> response) {
+                        try {
+                            handleDebtResponse(response.body()[1]);
+                        } catch (IOException e) {
+                            Timber.e(e, e.getMessage());
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<List<WorldBankModel>[]> call, Throwable t) {
+                        Timber.e(t, t.getMessage());
+                    }
+                });
+    }
+
+    private void handleDebtResponse(List<WorldBankModel> p_models) throws IOException {
+        for (WorldBankModel model : p_models) m_debt.put(model.getDate(), model.getValue());
+
+        String query = ServiceUtils.countryForCurrency(m_valuta) + "/indicators/CC.NO.SRC";
+        Map<String, String> params = getTrainingWorldParams();
+        RestClient.createWorld(WorldBankWebService.class).get(query, params).enqueue(
+                new Callback<List<WorldBankModel>[]>() {
+                    @Override
+                    public void onResponse(Call<List<WorldBankModel>[]> call,
+                                           Response<List<WorldBankModel>[]> response) {
+                        try {
+                            handleCorruptionResponse(response.body()[1]);
+                        } catch (IOException e) {
+                            Timber.e(e, e.getMessage());
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<List<WorldBankModel>[]> call, Throwable t) {
+                        Timber.e(t, t.getMessage());
+                    }
+                });
+    }
+
+    private void handleCorruptionResponse(List<WorldBankModel> p_models) throws IOException {
+        for (WorldBankModel model : p_models) m_corruption.put(model.getDate(), model.getValue());
+
+        insertTrainingDataToFile();
+    }
+
+    private void insertTrainingDataToFile() throws IOException {
+        String path = getExternalFilesDir(null).getPath() + "/" + "trening" + m_valutaLowerCase + ".csv";
+        File file = new File(path);
+        ReadCSV csv = new ReadCSV(file, true, new CSVFormat());
+
+        String pathFull = getExternalFilesDir(null).getPath() + "/" + "fulltrening" + m_valutaLowerCase + ".csv";
+        BufferedWriter writer = new BufferedWriter(new FileWriter(pathFull, false));
+        StringBuilder sb = new StringBuilder();
+
+        sb.append(COLUMN_DATE).append(",")
+                .append(m_valuta).append(",")
+                .append(COLUMN_NEER).append(",")
+                .append(COLUMN_RHCI).append(",")
+                .append(COLUMN_NHCI).append(",")
+                .append(COLUMN_DEBT).append(",")
+                .append(COLUMN_CORRUPTION).append(",");
+
+        sb.append("\n");
+        while (csv.next()) {
+            String timePeriod = csv.get(COLUMN_DATE);
+            LocalDate date = LocalDate.parse(timePeriod, DateTimeFormat.forPattern(DATE_FORMAT));
+
+            String value = csv.get(m_valuta);
+            String neer = csv.get(COLUMN_NEER);
+            double rhci = m_rhci.get(date.withDayOfMonth(1));
+            double nhci = m_nhci.get(date.withDayOfMonth(1));
+
+            String year = String.valueOf(date.getYear());
+            String debt = m_debt.containsKey(year) ? String.valueOf(m_debt.get(year)) : "?";
+            String corruption = m_corruption.containsKey(year) ? String.valueOf(m_corruption.get(year)) : "?";
+
+            sb.append(timePeriod).append(",")
+                    .append(value).append(",")
+                    .append(neer).append(",")
+                    .append(rhci).append(",")
+                    .append(nhci).append(",")
+                    .append(debt).append(",")
+                    .append(corruption).append(",");
+
+            sb.append("\n");
+        }
+
+        String result = sb.toString();
+        writer.write(result);
+        writer.close();
+
+
+        Pair<MLRegression, NormalizationHelper> pair = trainData();
+    }
+
+    @NonNull
+    private Map<String, String> getTrainingEcbParams() {
+        Map<String, String> params = new HashMap<>();
+        LocalDate start = LocalDate.parse(START_DATE,
+                                          DateTimeFormat.forPattern(DownloadIntentService.DATE_FORMAT_SQLITE));
+        params.put(DownloadIntentService.START_PERIOD, start.toString(DownloadIntentService.DATE_FORMAT_SQLITE));
+        params.put(DownloadIntentService.END_PERIOD,
+                   LocalDate.now().toString(DownloadIntentService.DATE_FORMAT_SQLITE));
+        return params;
+    }
+
+    @NonNull
+    private Map<String, String> getTrainingWorldParams() {
+        Map<String, String> params = new HashMap<>();
+        params.put(PARAM_DATE, START_YEAR + ":" + END_YEAR);
+        params.put(PARAM_FORMAT, JSON);
+        return params;
     }
 }
