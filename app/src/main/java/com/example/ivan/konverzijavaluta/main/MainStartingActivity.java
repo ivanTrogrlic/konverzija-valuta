@@ -17,6 +17,7 @@ import android.widget.Toast;
 import com.example.ivan.konverzijavaluta.R;
 import com.example.ivan.konverzijavaluta.service.DownloadIntentService;
 import com.example.ivan.konverzijavaluta.service.SaveCsvFileToSqlService;
+import com.example.ivan.konverzijavaluta.ui.CalculatorActivity;
 import com.example.ivan.konverzijavaluta.ui.GraphActivity;
 import com.example.ivan.konverzijavaluta.ui.PastDataActivity;
 import com.example.ivan.konverzijavaluta.ui.PredictedDataActivity;
@@ -108,31 +109,30 @@ public class MainStartingActivity extends AppCompatActivity {
 
     @OnClick(R.id.calculator)
     public void openCalculator() {
-        Toast.makeText(this, "Not implemented yet", Toast.LENGTH_SHORT).show();
+        if (checkIfHasLatestData()) return;
+
+        startActivity(new Intent(this, CalculatorActivity.class));
     }
 
     @OnClick(R.id.past_data)
     public void openPastData() {
         if (checkIfHasLatestData()) return;
 
-        Intent intent = new Intent(this, PastDataActivity.class);
-        startActivity(intent);
+        startActivity(new Intent(this, PastDataActivity.class));
     }
 
     @OnClick(R.id.predicted_data)
     public void openPredictedData() {
         if (checkIfHasLatestData()) return;
 
-        Intent intent = new Intent(this, PredictedDataActivity.class);
-        startActivity(intent);
+        startActivity(new Intent(this, PredictedDataActivity.class));
     }
 
     @OnClick(R.id.graph_data)
     public void openGraphData() {
         if (checkIfHasLatestData()) return;
 
-        Intent intent = new Intent(this, GraphActivity.class);
-        startActivity(intent);
+        startActivity(new Intent(this, GraphActivity.class));
     }
 
     private boolean checkIfHasLatestData() {

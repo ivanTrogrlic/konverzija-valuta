@@ -108,7 +108,6 @@ public class GraphActivity extends AppCompatActivity implements OnChartValueSele
         m_spinner.setAdapter(dataAdapter);
         m_selectedCurrency = String.valueOf(m_spinner.getSelectedItem());
     }
-
     private void initGraph() {
         m_chart.setOnChartValueSelectedListener(this);
 
