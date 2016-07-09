@@ -104,4 +104,24 @@ public class ServiceUtils {
                 throw new IllegalArgumentException("Unknown currency");
         }
     }
+
+    public static String getE5orE7(String p_currency) {
+        if (p_currency.equals("BRL")
+                || p_currency.equals("IRD")
+                || p_currency.equals("ILS")
+                || p_currency.equals("INR")
+                || p_currency.equals("ISK")
+                || p_currency.equals("MXN")
+                || p_currency.equals("MYR")
+                || p_currency.equals("NZD")
+                || p_currency.equals("PHP")
+                || p_currency.equals("RUB")
+                || p_currency.equals("SEK")
+                || p_currency.equals("THB")
+                || p_currency.equals("TRY")
+                || p_currency.equals("ZAR")) {
+            return "E7";
+        }
+        return "E5";
+    }
 }

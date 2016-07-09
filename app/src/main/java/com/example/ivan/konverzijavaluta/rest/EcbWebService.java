@@ -14,4 +14,7 @@ import retrofit2.http.QueryMap;
 public interface EcbWebService {
     @GET("data/EXR/{path}")
     Call<ResponseBody> get(@Path("path") String p_path, @QueryMap Map<String, String> p_params);
+
+    @GET("data/FM/M.U2.EUR.4F.CY.OILBRNI.HSTA")
+    Call<ResponseBody> getOil(@QueryMap Map<String, String> p_params);
 }
