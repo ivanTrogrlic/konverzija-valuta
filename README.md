@@ -6,6 +6,6 @@ Later it turned into a school project, where I added Artifitial neural networks 
 
 It's using the data from European Central Bank and World Bank for traning the model.
 
-Code is pretty messy since I was in a hurry when wring it and didn't have as much experience :)
+Code is pretty messy since I was in a hurry when writing it and didn't have as much experience :)
 
 It was not written in MVP or simillar arhitecture, it doesn't use RxJava / Lambdas / Stream support, which I would use if I was making it now :)
