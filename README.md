@@ -8,4 +8,4 @@ It's using the data from European Central Bank and World Bank for traning the mo
 
 Code is pretty messy since I was in a hurry when writing it and didn't have as much experience :)
 
-It was not written in MVP or simillar arhitecture, it doesn't use RxJava / Lambdas / Stream support or any ORM library (like Requery) which I would use if I was making it now :)
+It was not written in MVP or simillar arhitecture, it doesn't use RxJava / Lambdas / Stream support or any ORM library which I would use if I was making it now :)
