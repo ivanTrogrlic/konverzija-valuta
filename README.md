@@ -1,6 +1,6 @@
 # konverzija-valuta
 
-This was my small learning project when I was staring with Android development. It was just downloading exchange list data and had a curency calculator.
+This was my small learning project when I was starting with Android development. It was just downloading exchange list data and had a curency calculator.
 
 Later it turned into a school project, where I added Artifitial neural networks to try and predict the exchange lists for the next month using Encog framework.
 
